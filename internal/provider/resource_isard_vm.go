@@ -36,6 +36,7 @@ type vmResourceModel struct {
 	TemplateID  types.String  `tfsdk:"template_id"`
 	VCPUs       types.Int64   `tfsdk:"vcpus"`
 	Memory      types.Float64 `tfsdk:"memory"`
+	Interfaces  types.List    `tfsdk:"interfaces"`
 }
 
 // Metadata returns the resource type name.
@@ -78,6 +79,11 @@ func (r *vmResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *r
 				Computed:            true,
 				MarkdownDescription: "Memoria RAM en GB (por defecto usa la del template)",
 			},
+			"interfaces": schema.ListAttribute{
+				ElementType:         types.StringType,
+				Optional:            true,
+				MarkdownDescription: "Lista de IDs de interfaces de red a utilizar (por defecto usa las del template)",
+			},
 		},
 	}
 }
@@ -114,6 +120,7 @@ func (r *vmResource) Create(ctx context.Context, req resource.CreateRequest, res
 	// Preparar hardware personalizado si se especifica
 	var vcpus *int64
 	var memory *float64
+	var interfaces []string
 	
 	if !plan.VCPUs.IsNull() && !plan.VCPUs.IsUnknown() {
 		v := plan.VCPUs.ValueInt64()
@@ -124,6 +131,14 @@ func (r *vmResource) Create(ctx context.Context, req resource.CreateRequest, res
 		m := plan.Memory.ValueFloat64()
 		memory = &m
 	}
+	
+	if !plan.Interfaces.IsNull() && !plan.Interfaces.IsUnknown() {
+		diags := plan.Interfaces.ElementsAs(ctx, &interfaces, false)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
 
 	// Crear el persistent desktop usando la API
 	desktopID, err := r.client.CreatePersistentDesktop(
@@ -132,6 +147,7 @@ func (r *vmResource) Create(ctx context.Context, req resource.CreateRequest, res
 		plan.TemplateID.ValueString(),
 		vcpus,
 		memory,
+		interfaces,
 	)
 	if err != nil {
 		resp.Diagnostics.AddError(

@@ -30,7 +30,7 @@ type HardwareSpec struct {
 }
 
 // CreatePersistentDesktop crea un nuevo persistent desktop
-func (c *Client) CreatePersistentDesktop(name, description, templateID string, vcpus *int64, memory *float64) (string, error) {
+func (c *Client) CreatePersistentDesktop(name, description, templateID string, vcpus *int64, memory *float64, interfaces []string) (string, error) {
 	reqURL := fmt.Sprintf("https://%s/api/v3/persistent_desktop", c.HostURL)
 
 	// Construir el payload
@@ -44,13 +44,16 @@ func (c *Client) CreatePersistentDesktop(name, description, templateID string, v
 	}
 
 	// Agregar hardware personalizado si se especifica
-	if vcpus != nil || memory != nil {
+	if vcpus != nil || memory != nil || len(interfaces) > 0 {
 		hardware := make(map[string]interface{})
 		if vcpus != nil {
 			hardware["vcpus"] = *vcpus
 		}
 		if memory != nil {
 			hardware["memory"] = *memory
+		}
+		if len(interfaces) > 0 {
+			hardware["interfaces"] = interfaces
 		}
 		payload["hardware"] = hardware
 	}

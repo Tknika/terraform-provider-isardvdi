@@ -154,6 +154,8 @@ func (p *IsardProvider) Resources(_ context.Context) []func() resource.Resource 
 	return []func() resource.Resource{
 		NewVMResource,
 		NewNetworkResource,
+		NewQoSNetResource,
+		NewNetworkInterfaceResource,
 	}
 }
 
@@ -161,5 +163,6 @@ func (p *IsardProvider) Resources(_ context.Context) []func() resource.Resource 
 func (p *IsardProvider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		NewTemplatesDataSource,
+		NewNetworkInterfacesDataSource,
 	}
 }
