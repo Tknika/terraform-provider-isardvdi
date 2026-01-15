@@ -159,6 +159,6 @@ func (p *IsardProvider) Resources(_ context.Context) []func() resource.Resource 
 // DataSources defines the data sources implemented in the provider.
 func (p *IsardProvider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
-		// NewExampleDataSource,
+		NewTemplatesDataSource,
 	}
 }
