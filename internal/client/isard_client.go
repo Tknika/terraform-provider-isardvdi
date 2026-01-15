@@ -41,18 +41,9 @@ func NewClient(host, token string) *Client {
 // SignIn performs the authentication flow
 func (c *Client) SignIn(authMethod, categoryID, username, password string) error {
 	if authMethod == "token" {
-		// Construir URL: endpoint + constants.LoginPath + ?provider= + auth_method +&category_id= + category_id
-		reqURL := fmt.Sprintf("https://%s%s?provider=%s&category_id=%s", c.HostURL, constants.LoginPath, "saml", categoryID)
-
-		req, err := http.NewRequest("GET", reqURL, nil)
-		if err != nil {
-			return err
-		}
-
-		// Enviamos el token configurado para obtener el temporal
-		req.Header.Set("Authorization", c.Token)
-
-		return c.executeAuthRequest(req)
+		// Cuando usamos token, simplemente lo usamos directamente sin hacer llamadas adicionales
+		// El token ya está almacenado en c.Token desde NewClient
+		return nil
 	}
 
 	if authMethod == "form" {
