@@ -1,0 +1,4 @@
+# Ejemplo de archivo terraform.tfvars
+# Copia este archivo a terraform.tfvars y configura tu token
+
+isard_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
