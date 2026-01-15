@@ -78,5 +78,14 @@ export TF_VAR_isard_category="default"
 
 ## Recursos y Data Sources
 
+### Recursos
+
 - [Resource: isard_vm](resources/isard_vm.md) - Gestión de desktops persistentes
+- [Resource: isard_network](resources/isard_network.md) - Gestión de redes virtuales de usuario
+- [Resource: isard_network_interface](resources/isard_network_interface.md) - Gestión de interfaces de red del sistema
+- [Resource: isard_qos_net](resources/isard_qos_net.md) - Gestión de perfiles QoS de red
+
+### Data Sources
+
 - [Data Source: isard_templates](data-sources/isard_templates.md) - Consulta de templates disponibles
+- [Data Source: isard_network_interfaces](data-sources/isard_network_interfaces.md) - Consulta de interfaces de red del sistema

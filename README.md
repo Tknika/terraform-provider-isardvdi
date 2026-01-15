@@ -4,9 +4,24 @@ Provider de Terraform para gestionar recursos en Isard VDI a través de su API v
 
 ## Características
 
-- ✅ Creación, lectura y eliminación de desktops persistentes
-- ✅ Listado de templates disponibles con filtrado por nombre
-- ✅ Soporte para autenticación mediante token o formulario
+### Recursos
+
+- ✅ **isard_vm** - Creación, lectura y eliminación de desktops persistentes con soporte para:
+  - Hardware personalizado (vCPUs, memoria)
+  - Interfaces de red personalizadas
+- ✅ **isard_network** - Gestión de redes virtuales de usuario
+- ✅ **isard_network_interface** - Gestión de interfaces de red del sistema (requiere admin)
+- ✅ **isard_qos_net** - Gestión de perfiles QoS de red (requiere admin)
+
+### Data Sources
+
+- ✅ **isard_templates** - Listado de templates disponibles con filtrado por nombre
+- ✅ **isard_network_interfaces** - Consulta de interfaces de red del sistema con filtros avanzados
+
+### Autenticación
+
+- ✅ Soporte para autenticación mediante token JWT
+- ✅ Soporte para autenticación mediante formulario (usuario/contraseña)
 - ✅ Configuración SSL flexible para desarrollo y producción
 
 ## Requisitos
@@ -76,13 +91,56 @@ resource "isard_vm" "mi_desktop" {
   description = "Desktop creado con Terraform"
   template_id = data.isard_templates.ubuntu.templates[0].id
 }
+
+# Crear una red virtual
+resource "isard_network" "mi_red" {
+  name        = "Red de Desarrollo"
+  description = "Red virtual para desarrollo"
+  model       = "virtio"
+  qos_id      = "unlimited"
+}
+
+# Crear interfaz de red del sistema (requiere admin)
+resource "isard_network_interface" "bridge_custom" {
+  id          = "bridge-custom"
+  name        = "Bridge Personalizado"
+  description = "Bridge para entorno custom"
+  net         = "br-custom"
+  kind        = "bridge"
+  model       = "virtio"
+  qos_id      = "unlimited"
+}
+
+# Crear VM con interfaces personalizadas
+resource "isard_vm" "vm_custom" {
+  name        = "vm-con-red-custom"
+  description = "VM con interfaces personalizadas"
+  template_id = data.isard_templates.ubuntu.templates[0].id
+  
+  interfaces = [
+    "wireguard",  # Requerido para RDP
+    isard_network_interface.bridge_custom.id
+  ]
+}
 ```
 
 ## Documentación
 
+### Provider
+
 - [Configuración del Provider](docs/index.md)
-- [Resource: isard_vm](docs/resources/isard_vm.md)
-- [Data Source: isard_templates](docs/data-sources/isard_templates.md)
+
+### Recursos
+
+- [Resource: isard_vm](docs/resources/isard_vm.md) - Gestión de VMs/desktops
+- [Resource: isard_network](docs/resources/isard_network.md) - Redes virtuales de usuario
+- [Resource: isard_network_interface](docs/resources/isard_network_interface.md) - Interfaces de red del sistema
+- [Resource: isard_qos_net](docs/resources/isard_qos_net.md) - Perfiles QoS de red
+
+### Data Sources
+
+- [Data Source: isard_templates](docs/data-sources/isard_templates.md) - Consulta de templates
+- [Data Source: isard_network_interfaces](data-sources/isard_network_interfaces.md) - Consulta de interfaces
 
 ## Ejemplos
 

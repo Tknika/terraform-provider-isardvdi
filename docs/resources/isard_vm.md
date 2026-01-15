@@ -40,6 +40,38 @@ resource "isard_vm" "equipo" {
 }
 ```
 
+### Con Hardware Personalizado
+
+```hcl
+resource "isard_vm" "potente" {
+  name        = "desktop-potente"
+  description = "Desktop con recursos aumentados"
+  template_id = data.isard_templates.ubuntu.templates[0].id
+  vcpus       = 8
+  memory      = 16.0
+}
+```
+
+### Con Interfaces de Red Personalizadas
+
+```hcl
+# Buscar interfaces disponibles
+data "isard_network_interfaces" "all" {}
+
+# Crear VM con interfaces específicas
+resource "isard_vm" "con_red" {
+  name        = "desktop-con-red-custom"
+  description = "Desktop con interfaces personalizadas"
+  template_id = data.isard_templates.ubuntu.templates[0].id
+  
+  # Importante: Si el template tiene RDP viewers, incluir wireguard
+  interfaces = [
+    "wireguard",
+    data.isard_network_interfaces.all.interfaces[0].id
+  ]
+}
+```
+
 ## Argumentos
 
 Los siguientes argumentos son soportados:
@@ -52,16 +84,17 @@ Los siguientes argumentos son soportados:
 ### Opcionales
 
 - `description` - (Opcional) Descripción del desktop.
+- `vcpus` - (Opcional) Número de CPUs virtuales. Si no se especifica, usa el valor del template.
+- `memory` - (Opcional) Memoria RAM en GB. Si no se especifica, usa el valor del template.
+- `interfaces` - (Opcional) Lista de IDs de interfaces de red a usar. Si no se especifica, usa las interfaces del template.
 
 ## Atributos Exportados
 
 Además de los argumentos anteriores, se exportan los siguientes atributos:
 
 - `id` - ID único del desktop en Isard VDI.
-- `vcpus` - Número de CPUs virtuales asignadas al desktop.
-- `memory` - Memoria RAM asignada al desktop (en GB).
-
-**Nota sobre Hardware:** Los valores de `vcpus` y `memory` son asignados por el servidor Isard VDI basándose en el template y las políticas/cuotas configuradas. No es posible especificar valores personalizados en la creación ya que el servidor los sobrescribe según sus políticas.
+- `vcpus` - Número de CPUs virtuales asignadas al desktop (computed).
+- `memory` - Memoria RAM asignada al desktop en GB (computed).
 
 ## Import
 
