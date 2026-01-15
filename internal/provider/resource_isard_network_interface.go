@@ -28,15 +28,24 @@ type networkInterfaceResource struct {
 	client *client.Client
 }
 
+// AllowedModel representa los permisos de acceso a la interfaz
+type AllowedModel struct {
+	Roles      types.List `tfsdk:"roles"`
+	Categories types.List `tfsdk:"categories"`
+	Groups     types.List `tfsdk:"groups"`
+	Users      types.List `tfsdk:"users"`
+}
+
 // networkInterfaceResourceModel maps the resource schema data.
 type networkInterfaceResourceModel struct {
-	ID          types.String `tfsdk:"id"`
-	Name        types.String `tfsdk:"name"`
-	Description types.String `tfsdk:"description"`
-	Net         types.String `tfsdk:"net"`
-	Kind        types.String `tfsdk:"kind"`
-	Model       types.String `tfsdk:"model"`
-	QoSID       types.String `tfsdk:"qos_id"`
+	ID          types.String  `tfsdk:"id"`
+	Name        types.String  `tfsdk:"name"`
+	Description types.String  `tfsdk:"description"`
+	Net         types.String  `tfsdk:"net"`
+	Kind        types.String  `tfsdk:"kind"`
+	Model       types.String  `tfsdk:"model"`
+	QoSID       types.String  `tfsdk:"qos_id"`
+	Allowed     *AllowedModel `tfsdk:"allowed"`
 }
 
 // Metadata returns the resource type name.
@@ -93,6 +102,33 @@ func (r *networkInterfaceResource) Schema(_ context.Context, _ resource.SchemaRe
 				},
 			},
 		},
+		Blocks: map[string]schema.Block{
+			"allowed": schema.SingleNestedBlock{
+				Description: "Permisos de acceso a la interfaz. Use listas vacías para permitir acceso a todos.",
+				Attributes: map[string]schema.Attribute{
+					"roles": schema.ListAttribute{
+						Description: "Lista de IDs de roles permitidos. Lista vacía = todos los roles. Omitir = sin restricción.",
+						ElementType: types.StringType,
+						Optional:    true,
+					},
+					"categories": schema.ListAttribute{
+						Description: "Lista de IDs de categorías permitidas. Lista vacía = todas las categorías.",
+						ElementType: types.StringType,
+						Optional:    true,
+					},
+					"groups": schema.ListAttribute{
+						Description: "Lista de IDs de grupos permitidos. Lista vacía = todos los grupos.",
+						ElementType: types.StringType,
+						Optional:    true,
+					},
+					"users": schema.ListAttribute{
+						Description: "Lista de IDs de usuarios permitidos. Lista vacía = todos los usuarios.",
+						ElementType: types.StringType,
+						Optional:    true,
+					},
+				},
+			},
+		},
 	}
 }
 
@@ -126,6 +162,88 @@ func (r *networkInterfaceResource) Create(ctx context.Context, req resource.Crea
 		return
 	}
 
+	// Construir el mapa allowed si está presente
+	var allowed map[string]interface{}
+	if plan.Allowed != nil {
+		allowed = make(map[string]interface{})
+		
+		// Roles
+		if !plan.Allowed.Roles.IsNull() {
+			var roles []string
+			diags = plan.Allowed.Roles.ElementsAs(ctx, &roles, false)
+			resp.Diagnostics.Append(diags...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+			if len(roles) == 0 {
+				allowed["roles"] = []interface{}{}
+			} else {
+				rolesInterface := make([]interface{}, len(roles))
+				for i, r := range roles {
+					rolesInterface[i] = r
+				}
+				allowed["roles"] = rolesInterface
+			}
+		}
+		
+		// Categories
+		if !plan.Allowed.Categories.IsNull() {
+			var categories []string
+			diags = plan.Allowed.Categories.ElementsAs(ctx, &categories, false)
+			resp.Diagnostics.Append(diags...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+			if len(categories) == 0 {
+				allowed["categories"] = []interface{}{}
+			} else {
+				categoriesInterface := make([]interface{}, len(categories))
+				for i, c := range categories {
+					categoriesInterface[i] = c
+				}
+				allowed["categories"] = categoriesInterface
+			}
+		}
+		
+		// Groups
+		if !plan.Allowed.Groups.IsNull() {
+			var groups []string
+			diags = plan.Allowed.Groups.ElementsAs(ctx, &groups, false)
+			resp.Diagnostics.Append(diags...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+			if len(groups) == 0 {
+				allowed["groups"] = []interface{}{}
+			} else {
+				groupsInterface := make([]interface{}, len(groups))
+				for i, g := range groups {
+					groupsInterface[i] = g
+				}
+				allowed["groups"] = groupsInterface
+			}
+		}
+		
+		// Users
+		if !plan.Allowed.Users.IsNull() {
+			var users []string
+			diags = plan.Allowed.Users.ElementsAs(ctx, &users, false)
+			resp.Diagnostics.Append(diags...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+			if len(users) == 0 {
+				allowed["users"] = []interface{}{}
+			} else {
+				usersInterface := make([]interface{}, len(users))
+				for i, u := range users {
+					usersInterface[i] = u
+				}
+				allowed["users"] = usersInterface
+			}
+		}
+	}
+
 	// Crear la interfaz de red
 	err := r.client.CreateNetworkInterface(
 		plan.ID.ValueString(),
@@ -135,6 +253,7 @@ func (r *networkInterfaceResource) Create(ctx context.Context, req resource.Crea
 		plan.Kind.ValueString(),
 		plan.Model.ValueString(),
 		plan.QoSID.ValueString(),
+		allowed,
 	)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -212,6 +331,57 @@ func (r *networkInterfaceResource) Read(ctx context.Context, req resource.ReadRe
 	if iface.QoSID != "" {
 		state.QoSID = types.StringValue(iface.QoSID)
 	}
+	
+	// Process allowed field if present
+	if iface.Allowed != nil {
+		allowedModel := &AllowedModel{}
+		
+		// Roles
+		if roles, ok := iface.Allowed["roles"].([]interface{}); ok {
+			rolesStr := make([]string, 0, len(roles))
+			for _, r := range roles {
+				if rs, ok := r.(string); ok {
+					rolesStr = append(rolesStr, rs)
+				}
+			}
+			allowedModel.Roles, _ = types.ListValueFrom(ctx, types.StringType, rolesStr)
+		}
+		
+		// Categories
+		if categories, ok := iface.Allowed["categories"].([]interface{}); ok {
+			categoriesStr := make([]string, 0, len(categories))
+			for _, c := range categories {
+				if cs, ok := c.(string); ok {
+					categoriesStr = append(categoriesStr, cs)
+				}
+			}
+			allowedModel.Categories, _ = types.ListValueFrom(ctx, types.StringType, categoriesStr)
+		}
+		
+		// Groups
+		if groups, ok := iface.Allowed["groups"].([]interface{}); ok {
+			groupsStr := make([]string, 0, len(groups))
+			for _, g := range groups {
+				if gs, ok := g.(string); ok {
+					groupsStr = append(groupsStr, gs)
+				}
+			}
+			allowedModel.Groups, _ = types.ListValueFrom(ctx, types.StringType, groupsStr)
+		}
+		
+		// Users
+		if users, ok := iface.Allowed["users"].([]interface{}); ok {
+			usersStr := make([]string, 0, len(users))
+			for _, u := range users {
+				if us, ok := u.(string); ok {
+					usersStr = append(usersStr, us)
+				}
+			}
+			allowedModel.Users, _ = types.ListValueFrom(ctx, types.StringType, usersStr)
+		}
+		
+		state.Allowed = allowedModel
+	}
 
 	// Set refreshed state
 	diags = resp.State.Set(ctx, &state)
@@ -271,6 +441,88 @@ func (r *networkInterfaceResource) Update(ctx context.Context, req resource.Upda
 		q := plan.QoSID.ValueString()
 		qosID = &q
 	}
+	
+	// Construir el mapa allowed si cambió
+	var allowed map[string]interface{}
+	if plan.Allowed != nil {
+		allowed = make(map[string]interface{})
+		
+		// Roles
+		if !plan.Allowed.Roles.IsNull() {
+			var roles []string
+			diags = plan.Allowed.Roles.ElementsAs(ctx, &roles, false)
+			resp.Diagnostics.Append(diags...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+			if len(roles) == 0 {
+				allowed["roles"] = []interface{}{}
+			} else {
+				rolesInterface := make([]interface{}, len(roles))
+				for i, r := range roles {
+					rolesInterface[i] = r
+				}
+				allowed["roles"] = rolesInterface
+			}
+		}
+		
+		// Categories
+		if !plan.Allowed.Categories.IsNull() {
+			var categories []string
+			diags = plan.Allowed.Categories.ElementsAs(ctx, &categories, false)
+			resp.Diagnostics.Append(diags...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+			if len(categories) == 0 {
+				allowed["categories"] = []interface{}{}
+			} else {
+				categoriesInterface := make([]interface{}, len(categories))
+				for i, c := range categories {
+					categoriesInterface[i] = c
+				}
+				allowed["categories"] = categoriesInterface
+			}
+		}
+		
+		// Groups
+		if !plan.Allowed.Groups.IsNull() {
+			var groups []string
+			diags = plan.Allowed.Groups.ElementsAs(ctx, &groups, false)
+			resp.Diagnostics.Append(diags...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+			if len(groups) == 0 {
+				allowed["groups"] = []interface{}{}
+			} else {
+				groupsInterface := make([]interface{}, len(groups))
+				for i, g := range groups {
+					groupsInterface[i] = g
+				}
+				allowed["groups"] = groupsInterface
+			}
+		}
+		
+		// Users
+		if !plan.Allowed.Users.IsNull() {
+			var users []string
+			diags = plan.Allowed.Users.ElementsAs(ctx, &users, false)
+			resp.Diagnostics.Append(diags...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+			if len(users) == 0 {
+				allowed["users"] = []interface{}{}
+			} else {
+				usersInterface := make([]interface{}, len(users))
+				for i, u := range users {
+					usersInterface[i] = u
+				}
+				allowed["users"] = usersInterface
+			}
+		}
+	}
 
 	// Actualizar la interfaz de red
 	err := r.client.UpdateNetworkInterface(
@@ -281,6 +533,7 @@ func (r *networkInterfaceResource) Update(ctx context.Context, req resource.Upda
 		kind,
 		model,
 		qosID,
+		allowed,
 	)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -314,6 +567,57 @@ func (r *networkInterfaceResource) Update(ctx context.Context, req resource.Upda
 	}
 	if iface.QoSID != "" {
 		plan.QoSID = types.StringValue(iface.QoSID)
+	}
+	
+	// Process allowed field if present
+	if iface.Allowed != nil {
+		allowedModel := &AllowedModel{}
+		
+		// Roles
+		if roles, ok := iface.Allowed["roles"].([]interface{}); ok {
+			rolesStr := make([]string, 0, len(roles))
+			for _, r := range roles {
+				if rs, ok := r.(string); ok {
+					rolesStr = append(rolesStr, rs)
+				}
+			}
+			allowedModel.Roles, _ = types.ListValueFrom(ctx, types.StringType, rolesStr)
+		}
+		
+		// Categories
+		if categories, ok := iface.Allowed["categories"].([]interface{}); ok {
+			categoriesStr := make([]string, 0, len(categories))
+			for _, c := range categories {
+				if cs, ok := c.(string); ok {
+					categoriesStr = append(categoriesStr, cs)
+				}
+			}
+			allowedModel.Categories, _ = types.ListValueFrom(ctx, types.StringType, categoriesStr)
+		}
+		
+		// Groups
+		if groups, ok := iface.Allowed["groups"].([]interface{}); ok {
+			groupsStr := make([]string, 0, len(groups))
+			for _, g := range groups {
+				if gs, ok := g.(string); ok {
+					groupsStr = append(groupsStr, gs)
+				}
+			}
+			allowedModel.Groups, _ = types.ListValueFrom(ctx, types.StringType, groupsStr)
+		}
+		
+		// Users
+		if users, ok := iface.Allowed["users"].([]interface{}); ok {
+			usersStr := make([]string, 0, len(users))
+			for _, u := range users {
+				if us, ok := u.(string); ok {
+					usersStr = append(usersStr, us)
+				}
+			}
+			allowedModel.Users, _ = types.ListValueFrom(ctx, types.StringType, usersStr)
+		}
+		
+		plan.Allowed = allowedModel
 	}
 
 	diags = resp.State.Set(ctx, plan)

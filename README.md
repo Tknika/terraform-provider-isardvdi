@@ -109,6 +109,14 @@ resource "isard_network_interface" "bridge_custom" {
   kind        = "bridge"
   model       = "virtio"
   qos_id      = "unlimited"
+  
+  # Hacer visible para todos los usuarios
+  allowed {
+    roles      = []
+    categories = []
+    groups     = []
+    users      = []
+  }
 }
 
 # Crear VM con interfaces personalizadas

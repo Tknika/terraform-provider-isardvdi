@@ -10,17 +10,18 @@ import (
 
 // NetworkInterface representa la estructura de una interfaz de red en la API
 type NetworkInterface struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description,omitempty"`
-	Net         string `json:"net"`
-	Kind        string `json:"kind,omitempty"`
-	Model       string `json:"model,omitempty"`
-	QoSID       string `json:"qos_id,omitempty"`
+	ID          string                 `json:"id"`
+	Name        string                 `json:"name"`
+	Description string                 `json:"description,omitempty"`
+	Net         string                 `json:"net"`
+	Kind        string                 `json:"kind,omitempty"`
+	Model       string                 `json:"model,omitempty"`
+	QoSID       string                 `json:"qos_id,omitempty"`
+	Allowed     map[string]interface{} `json:"allowed,omitempty"`
 }
 
 // CreateNetworkInterface crea una nueva interfaz de red
-func (c *Client) CreateNetworkInterface(id, name, description, net, kind, model, qosID string) error {
+func (c *Client) CreateNetworkInterface(id, name, description, net, kind, model, qosID string, allowed map[string]interface{}) error {
 	reqURL := fmt.Sprintf("https://%s/api/v3/admin/table/add/interfaces", c.HostURL)
 
 	// Construir el payload
@@ -44,6 +45,10 @@ func (c *Client) CreateNetworkInterface(id, name, description, net, kind, model,
 	
 	if qosID != "" {
 		payload["qos_id"] = qosID
+	}
+	
+	if allowed != nil {
+		payload["allowed"] = allowed
 	}
 
 	jsonData, err := json.Marshal(payload)
@@ -128,7 +133,7 @@ func (c *Client) GetNetworkInterface(interfaceID string) (*NetworkInterface, err
 }
 
 // UpdateNetworkInterface actualiza una interfaz de red existente
-func (c *Client) UpdateNetworkInterface(id string, name, description, net, kind, model, qosID *string) error {
+func (c *Client) UpdateNetworkInterface(id string, name, description, net, kind, model, qosID *string, allowed map[string]interface{}) error {
 	reqURL := fmt.Sprintf("https://%s/api/v3/admin/table/update/interfaces", c.HostURL)
 
 	// Construir el payload con el ID y los campos a actualizar
@@ -158,6 +163,10 @@ func (c *Client) UpdateNetworkInterface(id string, name, description, net, kind,
 	
 	if qosID != nil {
 		payload["qos_id"] = *qosID
+	}
+	
+	if allowed != nil {
+		payload["allowed"] = allowed
 	}
 
 	jsonData, err := json.Marshal(payload)

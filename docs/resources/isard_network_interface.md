@@ -46,6 +46,69 @@ resource "isard_network_interface" "personal_range" {
 }
 ```
 
+### Interfaz Visible para Todos
+
+```hcl
+resource "isard_network_interface" "public_bridge" {
+  id          = "bridge-public"
+  name        = "Bridge Público"
+  description = "Interfaz visible para todos los usuarios"
+  net         = "br-public"
+  kind        = "bridge"
+  model       = "virtio"
+  qos_id      = "unlimited"
+  
+  # Listas vacías = visible para todos
+  allowed {
+    roles      = []
+    categories = []
+    groups     = []
+    users      = []
+  }
+}
+```
+
+### Interfaz con Permisos Específicos
+
+```hcl
+resource "isard_network_interface" "restricted_bridge" {
+  id          = "bridge-restricted"
+  name        = "Bridge Restringido"
+  description = "Solo para roles admin y manager"
+  net         = "br-restricted"
+  kind        = "bridge"
+  model       = "virtio"
+  qos_id      = "standard"
+  
+  allowed {
+    roles      = ["admin", "manager"]
+    categories = []  # Sin restricciones por categoría
+    groups     = []  # Sin restricciones por grupo
+    users      = []  # Sin restricciones por usuario
+  }
+}
+```
+
+### Interfaz para Categoría Específica
+
+```hcl
+resource "isard_network_interface" "category_bridge" {
+  id          = "bridge-marketing"
+  name        = "Bridge Marketing"
+  description = "Solo para la categoría marketing"
+  net         = "br-marketing"
+  kind        = "bridge"
+  model       = "virtio"
+  
+  allowed {
+    roles      = []
+    categories = ["marketing-category-id"]
+    groups     = []
+    users      = []
+  }
+}
+```
+
 ### Usar con VM
 
 ```hcl
@@ -96,6 +159,13 @@ Los siguientes argumentos son soportados:
   - `"personal"` - Red personal con rango VLAN
 - `model` - (Opcional, Computed) Modelo de dispositivo de red. Por defecto: `"virtio"`. Valores: `"virtio"`, `"e1000"`, `"rtl8139"`.
 - `qos_id` - (Opcional, Computed) ID del perfil QoS de red. Por defecto: `"unlimited"`.
+- `allowed` - (Opcional) Bloque de permisos de acceso. Si se omite, la interfaz no tendrá restricciones específicas.
+  - `roles` - (Opcional) Lista de IDs de roles permitidos. Lista vacía `[]` = todos los roles pueden usar la interfaz.
+  - `categories` - (Opcional) Lista de IDs de categorías permitidas. Lista vacía `[]` = todas las categorías.
+  - `groups` - (Opcional) Lista de IDs de grupos permitidos. Lista vacía `[]` = todos los grupos.
+  - `users` - (Opcional) Lista de IDs de usuarios permitidos. Lista vacía `[]` = todos los usuarios.
+
+**Nota sobre permisos:** Para hacer una interfaz visible a todos los usuarios, use el bloque `allowed` con todas las listas vacías (`[]`). Si omite el bloque `allowed` completamente, la interfaz seguirá siendo accesible pero sin definición explícita de permisos.
 
 ## Atributos Exportados
 
@@ -143,6 +213,70 @@ Al eliminar una interfaz:
 - Al eliminar una interfaz, se desasigna de todas las VMs que la usen
 - Para VMs con viewers RDP, es obligatorio incluir la interfaz `wireguard`
 - Los valores `kind`, `model` y `qos_id` tienen valores por defecto del sistema si no se especifican
+
+## Control de Acceso con `allowed`
+
+El bloque `allowed` controla qué usuarios pueden ver y usar la interfaz de red:
+
+### Hacer la Interfaz Visible para Todos
+
+Para que **todos los usuarios** puedan usar la interfaz:
+
+```hcl
+allowed {
+  roles      = []
+  categories = []
+  groups     = []
+  users      = []
+}
+```
+
+### Restringir por Rol
+
+Para limitar a roles específicos:
+
+```hcl
+allowed {
+  roles      = ["admin", "manager", "advanced"]
+  categories = []  # Sin restricción adicional
+  groups     = []
+  users      = []
+}
+```
+
+### Restringir por Categoría
+
+Para limitar a categorías específicas:
+
+```hcl
+allowed {
+  roles      = []
+  categories = ["categoria-dev", "categoria-prod"]
+  groups     = []
+  users      = []
+}
+```
+
+### Combinación de Restricciones
+
+Puede combinar restricciones. El usuario debe cumplir AL MENOS UNA de las restricciones no vacías:
+
+```hcl
+allowed {
+  roles      = ["admin"]               # Administradores
+  categories = ["categoria-especial"]  # O usuarios de esta categoría
+  groups     = []
+  users      = ["user-id-especifico"]  # O este usuario específico
+}
+```
+
+### Comportamiento de Permisos
+
+- **Lista vacía (`[]`)**: Sin restricción en ese nivel (permite a todos)
+- **Lista con IDs**: Solo esos IDs específicos tienen acceso
+- **Campo omitido**: Sin restricción explícita en ese nivel
+
+**Importante**: Las restricciones se evalúan con lógica OR entre tipos. Si un usuario cumple **cualquiera** de las restricciones definidas (rol, categoría, grupo o usuario), tendrá acceso.
 
 ## Tipos de Interfaz
 
