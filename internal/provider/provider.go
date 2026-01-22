@@ -153,6 +153,7 @@ func (p *IsardProvider) Configure(ctx context.Context, req provider.ConfigureReq
 func (p *IsardProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		NewVMResource,
+		NewDeploymentResource,
 		NewNetworkResource,
 		NewQoSNetResource,
 		NewNetworkInterfaceResource,

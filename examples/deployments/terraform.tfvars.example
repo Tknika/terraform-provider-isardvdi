@@ -1,0 +1,7 @@
+# Copia este archivo a terraform.tfvars y configura tus valores
+
+# Token de autenticación para Isard VDI
+isard_token = "your-isard-token-here"
+
+# ID de la plantilla a utilizar para los desktops
+template_id = "your-template-uuid-here"

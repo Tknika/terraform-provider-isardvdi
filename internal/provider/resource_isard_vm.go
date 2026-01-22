@@ -160,19 +160,8 @@ func (r *vmResource) Create(ctx context.Context, req resource.CreateRequest, res
 	// Actualizar el plan con el ID devuelto por la API
 	plan.ID = types.StringValue(desktopID)
 
-	// Obtener los valores finales del desktop creado (incluyendo valores por defecto)
-	desktop, err := r.client.GetDesktop(desktopID)
-	if err == nil {
-		if desktop.Description != "" {
-			plan.Description = types.StringValue(desktop.Description)
-		}
-		if desktop.VCPUs > 0 {
-			plan.VCPUs = types.Int64Value(desktop.VCPUs)
-		}
-		if desktop.Memory > 0 {
-			plan.Memory = types.Float64Value(desktop.Memory)
-		}
-	}
+	// No leer valores de hardware - la API devuelve valores del template
+	// Mantener los valores del plan de Terraform
 
 	// Escribir el estado
 	diags = resp.State.Set(ctx, plan)
@@ -208,13 +197,8 @@ func (r *vmResource) Read(ctx context.Context, req resource.ReadRequest, resp *r
 	state.Description = types.StringValue(desktop.Description)
 	state.TemplateID = types.StringValue(desktop.TemplateID)
 	
-	// Actualizar hardware si está disponible
-	if desktop.VCPUs > 0 {
-		state.VCPUs = types.Int64Value(desktop.VCPUs)
-	}
-	if desktop.Memory > 0 {
-		state.Memory = types.Float64Value(desktop.Memory)
-	}
+	// No actualizar hardware - la API devuelve valores del template, no los configurados
+	// Mantener los valores del estado de Terraform
 
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)

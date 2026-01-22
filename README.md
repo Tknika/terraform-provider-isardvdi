@@ -9,6 +9,7 @@ Provider de Terraform para gestionar recursos en Isard VDI a través de su API v
 - ✅ **isard_vm** - Creación, lectura y eliminación de desktops persistentes con soporte para:
   - Hardware personalizado (vCPUs, memoria)
   - Interfaces de red personalizadas
+- ✅ **isard_deployment** - Gestión de deployments para crear múltiples desktops para usuarios/grupos
 - ✅ **isard_network** - Gestión de redes virtuales de usuario
 - ✅ **isard_network_interface** - Gestión de interfaces de red del sistema (requiere admin)
 - ✅ **isard_qos_net** - Gestión de perfiles QoS de red (requiere admin)
@@ -92,6 +93,22 @@ resource "isard_vm" "mi_desktop" {
   template_id = data.isard_templates.ubuntu.templates[0].id
 }
 
+# Crear un deployment para un equipo
+resource "isard_deployment" "equipo_dev" {
+  name         = "Deployment Equipo Dev"
+  description  = "Desktops para el equipo de desarrollo"
+  template_id  = data.isard_templates.ubuntu.templates[0].id
+  desktop_name = "Desktop Dev"
+  visible      = false
+  
+  vcpus  = 4
+  memory = 8.0
+
+  allowed {
+    groups = ["dev-group-uuid"]
+  }
+}
+
 # Crear una red virtual
 resource "isard_network" "mi_red" {
   name        = "Red de Desarrollo"
@@ -141,6 +158,7 @@ resource "isard_vm" "vm_custom" {
 ### Recursos
 
 - [Resource: isard_vm](docs/resources/isard_vm.md) - Gestión de VMs/desktops
+- [Resource: isard_deployment](docs/resources/deployment.md) - Gestión de deployments
 - [Resource: isard_network](docs/resources/isard_network.md) - Redes virtuales de usuario
 - [Resource: isard_network_interface](docs/resources/isard_network_interface.md) - Interfaces de red del sistema
 - [Resource: isard_qos_net](docs/resources/isard_qos_net.md) - Perfiles QoS de red
