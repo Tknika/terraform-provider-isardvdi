@@ -7,6 +7,7 @@ resource "isard_network_interface" "vlan100" {
   description = "Bridge para VLAN 100 - Red de desarrollo"
   net         = "br-vlan100"
   kind        = "bridge"
+  ifname      = "interface"
   model       = "virtio"
   qos_id      = "unlimited"
 }
@@ -18,6 +19,7 @@ resource "isard_network_interface" "public_bridge" {
   description = "Interfaz visible para todos"
   net         = "br-public"
   kind        = "bridge"
+  ifname      = "interface"
   model       = "virtio"
   qos_id      = "unlimited"
   
@@ -37,6 +39,7 @@ resource "isard_network_interface" "admin_bridge" {
   description = "Solo para administradores"
   net         = "br-admin"
   kind        = "bridge"
+  ifname      = "interface"
   model       = "virtio"
   qos_id      = "standard"
   
@@ -55,6 +58,7 @@ resource "isard_network_interface" "category_bridge" {
   description = "Para categoría marketing"
   net         = "br-marketing"
   kind        = "bridge"
+  ifname      = "interface"
   model       = "virtio"
   
   allowed {
@@ -63,6 +67,44 @@ resource "isard_network_interface" "category_bridge" {
     groups     = []
     users      = []
   }
+}
+
+# Ejemplos de diferentes tipos de kind
+
+# Interfaz tipo OVS
+resource "isard_network_interface" "ovs_example" {
+  id          = "ovs-vlan-2056"
+  name        = "OVS VLAN 2056"
+  description = "Interfaz OVS con VLAN 2056"
+  kind        = "ovs"
+  ifname      = "2056"
+  model       = "virtio"
+  qos_id      = "unlimited"
+  net         = "2056"
+}
+
+# Interfaz tipo network
+resource "isard_network_interface" "network_example" {
+  id          = "network1-interface"
+  name        = "Network 1"
+  description = "Red libvirt"
+  kind        = "network"
+  ifname      = "network1"
+  model       = "virtio"
+  qos_id      = "unlimited"
+  net         = "network1"
+}
+
+# Interfaz tipo personal (rango VLAN)
+resource "isard_network_interface" "personal_example" {
+  id          = "personal-vlan-range"
+  name        = "Personal VLAN Range"
+  description = "Rango VLAN personal 1000-1500"
+  kind        = "personal"
+  ifname      = "1000-1500"
+  model       = "virtio"
+  qos_id      = "unlimited"
+  net         = "1000-1500"
 }
 
 # Output para ver la información de las interfaces
@@ -79,6 +121,21 @@ output "interfaces_info" {
     admin = {
       id   = isard_network_interface.admin_bridge.id
       name = isard_network_interface.admin_bridge.name
+    }
+    ovs = {
+      id   = isard_network_interface.ovs_example.id
+      name = isard_network_interface.ovs_example.name
+      kind = isard_network_interface.ovs_example.kind
+    }
+    network = {
+      id   = isard_network_interface.network_example.id
+      name = isard_network_interface.network_example.name
+      kind = isard_network_interface.network_example.kind
+    }
+    personal = {
+      id   = isard_network_interface.personal_example.id
+      name = isard_network_interface.personal_example.name
+      kind = isard_network_interface.personal_example.kind
     }
   }
 }

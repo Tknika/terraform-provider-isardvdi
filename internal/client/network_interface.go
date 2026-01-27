@@ -17,11 +17,12 @@ type NetworkInterface struct {
 	Kind        string                 `json:"kind,omitempty"`
 	Model       string                 `json:"model,omitempty"`
 	QoSID       string                 `json:"qos_id,omitempty"`
+	Ifname      string                 `json:"ifname,omitempty"`
 	Allowed     map[string]interface{} `json:"allowed,omitempty"`
 }
 
 // CreateNetworkInterface crea una nueva interfaz de red
-func (c *Client) CreateNetworkInterface(id, name, description, net, kind, model, qosID string, allowed map[string]interface{}) error {
+func (c *Client) CreateNetworkInterface(id, name, description, net, kind, model, qosID, ifname string, allowed map[string]interface{}) error {
 	reqURL := fmt.Sprintf("https://%s/api/v3/admin/table/add/interfaces", c.HostURL)
 
 	// Construir el payload
@@ -45,6 +46,10 @@ func (c *Client) CreateNetworkInterface(id, name, description, net, kind, model,
 	
 	if qosID != "" {
 		payload["qos_id"] = qosID
+	}
+	
+	if ifname != "" {
+		payload["ifname"] = ifname
 	}
 	
 	if allowed != nil {
@@ -133,7 +138,7 @@ func (c *Client) GetNetworkInterface(interfaceID string) (*NetworkInterface, err
 }
 
 // UpdateNetworkInterface actualiza una interfaz de red existente
-func (c *Client) UpdateNetworkInterface(id string, name, description, net, kind, model, qosID *string, allowed map[string]interface{}) error {
+func (c *Client) UpdateNetworkInterface(id string, name, description, net, kind, model, qosID, ifname *string, allowed map[string]interface{}) error {
 	reqURL := fmt.Sprintf("https://%s/api/v3/admin/table/update/interfaces", c.HostURL)
 
 	// Construir el payload con el ID y los campos a actualizar
@@ -163,6 +168,10 @@ func (c *Client) UpdateNetworkInterface(id string, name, description, net, kind,
 	
 	if qosID != nil {
 		payload["qos_id"] = *qosID
+	}
+	
+	if ifname != nil {
+		payload["ifname"] = *ifname
 	}
 	
 	if allowed != nil {

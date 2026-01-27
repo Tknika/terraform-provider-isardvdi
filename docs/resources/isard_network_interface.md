@@ -13,6 +13,7 @@ resource "isard_network_interface" "bridge_dev" {
   description = "Interfaz bridge para desarrollo"
   net         = "br-public"
   kind        = "bridge"
+  ifname      = "interface"
   model       = "virtio"
   qos_id      = "unlimited"
 }
@@ -27,6 +28,7 @@ resource "isard_network_interface" "ovs_vlan100" {
   description = "Interfaz OVS con VLAN 100"
   net         = "100"
   kind        = "ovs"
+  ifname      = "100"
   model       = "virtio"
   qos_id      = "standard"
 }
@@ -41,6 +43,7 @@ resource "isard_network_interface" "personal_range" {
   description = "Rango VLAN personal para equipo"
   net         = "200-210"
   kind        = "personal"
+  ifname      = "200-210"
   model       = "virtio"
   qos_id      = "unlimited"
 }
@@ -55,6 +58,7 @@ resource "isard_network_interface" "public_bridge" {
   description = "Interfaz visible para todos los usuarios"
   net         = "br-public"
   kind        = "bridge"
+  ifname      = "interface"
   model       = "virtio"
   qos_id      = "unlimited"
   
@@ -77,6 +81,7 @@ resource "isard_network_interface" "restricted_bridge" {
   description = "Solo para roles admin y manager"
   net         = "br-restricted"
   kind        = "bridge"
+  ifname      = "interface"
   model       = "virtio"
   qos_id      = "standard"
   
@@ -98,6 +103,7 @@ resource "isard_network_interface" "category_bridge" {
   description = "Solo para la categoría marketing"
   net         = "br-marketing"
   kind        = "bridge"
+  ifname      = "interface"
   model       = "virtio"
   
   allowed {
@@ -119,6 +125,7 @@ resource "isard_network_interface" "custom_bridge" {
   description = "Bridge personalizado"
   net         = "br-custom"
   kind        = "bridge"
+  ifname      = "interface"
   model       = "virtio"
   qos_id      = "unlimited"
 }
@@ -157,6 +164,7 @@ Los siguientes argumentos son soportados:
   - `"network"` - Red libvirt
   - `"ovs"` - Open vSwitch
   - `"personal"` - Red personal con rango VLAN
+- `ifname` - (Opcional) Nombre de la interfaz física/virtual. Típicamente coincide con `net` o representa la VLAN/rango.
 - `model` - (Opcional, Computed) Modelo de dispositivo de red. Por defecto: `"virtio"`. Valores: `"virtio"`, `"e1000"`, `"rtl8139"`.
 - `qos_id` - (Opcional, Computed) ID del perfil QoS de red. Por defecto: `"unlimited"`.
 - `allowed` - (Opcional) Bloque de permisos de acceso. Si se omite, la interfaz no tendrá restricciones específicas.

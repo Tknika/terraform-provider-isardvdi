@@ -45,6 +45,7 @@ type networkInterfaceResourceModel struct {
 	Kind        types.String  `tfsdk:"kind"`
 	Model       types.String  `tfsdk:"model"`
 	QoSID       types.String  `tfsdk:"qos_id"`
+	Ifname      types.String  `tfsdk:"ifname"`
 	Allowed     *AllowedModel `tfsdk:"allowed"`
 }
 
@@ -100,6 +101,10 @@ func (r *networkInterfaceResource) Schema(_ context.Context, _ resource.SchemaRe
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
+			},
+			"ifname": schema.StringAttribute{
+				Description: "Opcion secundaria según el tipo de interfaz.",
+				Optional:    true,
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -253,6 +258,7 @@ func (r *networkInterfaceResource) Create(ctx context.Context, req resource.Crea
 		plan.Kind.ValueString(),
 		plan.Model.ValueString(),
 		plan.QoSID.ValueString(),
+		plan.Ifname.ValueString(),
 		allowed,
 	)
 	if err != nil {
@@ -282,6 +288,9 @@ func (r *networkInterfaceResource) Create(ctx context.Context, req resource.Crea
 	}
 	if iface.QoSID != "" {
 		plan.QoSID = types.StringValue(iface.QoSID)
+	}
+	if iface.Ifname != "" {
+		plan.Ifname = types.StringValue(iface.Ifname)
 	}
 
 	// Set state to fully populated data
@@ -330,6 +339,9 @@ func (r *networkInterfaceResource) Read(ctx context.Context, req resource.ReadRe
 	}
 	if iface.QoSID != "" {
 		state.QoSID = types.StringValue(iface.QoSID)
+	}
+	if iface.Ifname != "" {
+		state.Ifname = types.StringValue(iface.Ifname)
 	}
 	
 	// Process allowed field if present
@@ -410,7 +422,7 @@ func (r *networkInterfaceResource) Update(ctx context.Context, req resource.Upda
 	}
 
 	// Preparar los valores a actualizar (solo los que cambiaron)
-	var name, description, net, kind, model, qosID *string
+	var name, description, net, kind, model, qosID, ifname *string
 
 	if !plan.Name.Equal(state.Name) {
 		n := plan.Name.ValueString()
@@ -440,6 +452,11 @@ func (r *networkInterfaceResource) Update(ctx context.Context, req resource.Upda
 	if !plan.QoSID.Equal(state.QoSID) {
 		q := plan.QoSID.ValueString()
 		qosID = &q
+	}
+
+	if !plan.Ifname.Equal(state.Ifname) {
+		i := plan.Ifname.ValueString()
+		ifname = &i
 	}
 	
 	// Construir el mapa allowed si cambió
@@ -533,6 +550,7 @@ func (r *networkInterfaceResource) Update(ctx context.Context, req resource.Upda
 		kind,
 		model,
 		qosID,
+		ifname,
 		allowed,
 	)
 	if err != nil {
@@ -567,6 +585,9 @@ func (r *networkInterfaceResource) Update(ctx context.Context, req resource.Upda
 	}
 	if iface.QoSID != "" {
 		plan.QoSID = types.StringValue(iface.QoSID)
+	}
+	if iface.Ifname != "" {
+		plan.Ifname = types.StringValue(iface.Ifname)
 	}
 	
 	// Process allowed field if present
