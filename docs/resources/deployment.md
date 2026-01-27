@@ -75,6 +75,42 @@ resource "isard_deployment" "network_deployment" {
     users  = ["admin-user-uuid"]
   }
 }
+
+# Deployment con viewers específicos
+resource "isard_deployment" "custom_viewers" {
+  name         = "Deployment con Viewers Personalizados"
+  description  = "Deployment con solo viewers web"
+  template_id  = "template-uuid-def"
+  desktop_name = "Desktop Web Access"
+  visible      = true
+  
+  # Solo habilitar viewers basados en navegador
+  viewers = ["browser_vnc", "browser_rdp"]
+
+  allowed {
+    groups = ["remote-team-uuid"]
+  }
+}
+
+# Deployment con todos los viewers disponibles
+resource "isard_deployment" "all_viewers" {
+  name         = "Deployment Acceso Completo"
+  description  = "Deployment con todos los métodos de acceso"
+  template_id  = "template-uuid-ghi"
+  desktop_name = "Desktop Full Access"
+  
+  viewers = [
+    "browser_rdp",
+    "browser_vnc",
+    "file_rdpgw",
+    "file_rdpvpn",
+    "file_spice"
+  ]
+
+  allowed {
+    users = ["power-user-uuid"]
+  }
+}
 ```
 
 ## Esquema de Argumentos
@@ -93,6 +129,12 @@ resource "isard_deployment" "network_deployment" {
 - `vcpus` (Number) Número de CPUs virtuales para los desktops. Si no se especifica, usa el valor del template.
 - `memory` (Number) Memoria RAM en GB para los desktops. Si no se especifica, usa el valor del template.
 - `interfaces` (List of String) Lista de IDs de interfaces de red a utilizar. Si no se especifica, usa las del template.
+- `viewers` (List of String) Lista de viewers habilitados para los desktops. Si no se especifica, usa los viewers del template. Valores disponibles:
+  - `browser_rdp` - Visor RDP en el navegador
+  - `browser_vnc` - Visor VNC en el navegador (noVNC)
+  - `file_rdpgw` - Archivo RDP con gateway
+  - `file_rdpvpn` - Archivo RDP con VPN
+  - `file_spice` - Visor SPICE (archivo de configuración)
 - `user_permissions` (List of String) Lista de permisos de usuario para el deployment.
 
 ### Atributos de Solo Lectura
@@ -111,6 +153,39 @@ El bloque `allowed` configura qué usuarios, grupos, categorías o roles tienen 
 - `users` (List of String) Lista de IDs de usuarios permitidos
 
 **Nota:** Al menos uno de estos campos debe especificarse en el bloque `allowed`.
+
+## Viewers Disponibles
+
+El parámetro `viewers` permite controlar qué métodos de visualización están disponibles para los desktops del deployment. Si no se especifica, se utilizarán los viewers configurados en el template.
+
+### Tipos de Viewers
+
+- **`browser_rdp`** - Visor RDP basado en navegador web. Permite conectarse a desktops Windows sin necesidad de instalar software adicional.
+- **`browser_vnc`** - Visor VNC en el navegador (noVNC). Proporciona acceso gráfico multiplataforma desde el navegador.
+- **`file_rdpgw`** - Archivo de configuración RDP con gateway. Descarga un archivo .rdp configurado para conectarse a través de un gateway RDP.
+- **`file_rdpvpn`** - Archivo de configuración RDP con VPN. Descarga un archivo .rdp configurado para conectarse a través de VPN.
+- **`file_spice`** - Visor SPICE (Simple Protocol for Independent Computing Environments). Proporciona alto rendimiento para desktops Linux/KVM.
+
+### Ejemplos de Configuración
+
+```terraform
+# Solo viewers web (sin instalación de cliente)
+viewers = ["browser_vnc", "browser_rdp"]
+
+# Solo SPICE para máximo rendimiento
+viewers = ["file_spice"]
+
+# RDP con múltiples opciones de conexión
+viewers = ["browser_rdp", "file_rdpgw", "file_rdpvpn"]
+
+# Todos los viewers disponibles
+viewers = ["browser_rdp", "browser_vnc", "file_rdpgw", "file_rdpvpn", "file_spice"]
+```
+
+**Recomendaciones:**
+- Para usuarios remotos sin VPN, usar `browser_vnc` o `browser_rdp`
+- Para máximo rendimiento en red local, usar `file_spice`
+- Para compatibilidad con clientes RDP nativos, incluir `file_rdpgw` o `file_rdpvpn`
 
 ## Importación
 

@@ -125,6 +125,63 @@ resource "isard_deployment" "multi_group_deployment" {
   }
 }
 
+# Ejemplo 7: Deployment con viewers personalizados (solo web)
+resource "isard_deployment" "web_viewers_deployment" {
+  name         = "Deployment Acceso Web"
+  description  = "Deployment con solo viewers basados en navegador"
+  template_id  = var.template_id
+  desktop_name = "Desktop Web"
+  visible      = true
+  
+  # Solo viewers web, sin necesidad de instalar clientes
+  viewers = ["browser_vnc", "browser_rdp"]
+
+  allowed {
+    groups = ["remote-workers-uuid"]
+  }
+}
+
+# Ejemplo 8: Deployment con SPICE para máximo rendimiento
+resource "isard_deployment" "spice_deployment" {
+  name         = "Deployment SPICE"
+  description  = "Deployment optimizado para alto rendimiento con SPICE"
+  template_id  = var.template_id
+  desktop_name = "Desktop SPICE"
+  visible      = true
+  
+  vcpus  = 4
+  memory = 8.0
+  
+  # Solo SPICE para máximo rendimiento
+  viewers = ["file_spice"]
+
+  allowed {
+    groups = ["design-team-uuid"]
+  }
+}
+
+# Ejemplo 9: Deployment con todos los viewers disponibles
+resource "isard_deployment" "full_access_deployment" {
+  name         = "Deployment Acceso Completo"
+  description  = "Deployment con todos los métodos de acceso disponibles"
+  template_id  = var.template_id
+  desktop_name = "Desktop Full"
+  visible      = true
+  
+  # Todos los viewers disponibles
+  viewers = [
+    "browser_rdp",
+    "browser_vnc",
+    "file_rdpgw",
+    "file_rdpvpn",
+    "file_spice"
+  ]
+
+  allowed {
+    users = ["admin-user-uuid"]
+  }
+}
+
 # Outputs para mostrar información de los deployments creados
 output "group_deployment_id" {
   description = "ID del deployment del grupo DevOps"
@@ -144,4 +201,14 @@ output "user_deployment_id" {
 output "category_deployment_id" {
   description = "ID del deployment de estudiantes"
   value       = isard_deployment.category_deployment.id
+}
+
+output "web_viewers_deployment_id" {
+  description = "ID del deployment con viewers web"
+  value       = isard_deployment.web_viewers_deployment.id
+}
+
+output "spice_deployment_id" {
+  description = "ID del deployment con SPICE"
+  value       = isard_deployment.spice_deployment.id
 }

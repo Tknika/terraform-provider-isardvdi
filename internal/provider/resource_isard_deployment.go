@@ -47,6 +47,7 @@ type deploymentResourceModel struct {
 	Memory          types.Float64 `tfsdk:"memory"`
 	Interfaces      types.List   `tfsdk:"interfaces"`
 	UserPermissions types.List   `tfsdk:"user_permissions"`
+	Viewers         types.List   `tfsdk:"viewers"`
 }
 
 // Metadata returns the resource type name.
@@ -144,6 +145,11 @@ func (r *deploymentResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				ElementType:         types.StringType,
 				Optional:            true,
 				MarkdownDescription: "Lista de permisos de usuario para el deployment",
+			},
+			"viewers": schema.ListAttribute{
+				ElementType:         types.StringType,
+				Optional:            true,
+				MarkdownDescription: "Lista de viewers habilitados (ej: ['browser_vnc', 'file_spice', 'file_rdpgw', 'browser_rdp']). Si no se especifica, se usan los del template.",
 			},
 		},
 	}
@@ -250,6 +256,7 @@ func (r *deploymentResource) Create(ctx context.Context, req resource.CreateRequ
 	var memory *float64
 	var interfaces []string
 	var userPermissions []string
+	var viewers []string
 	
 	if !plan.VCPUs.IsNull() && !plan.VCPUs.IsUnknown() {
 		v := plan.VCPUs.ValueInt64()
@@ -276,6 +283,26 @@ func (r *deploymentResource) Create(ctx context.Context, req resource.CreateRequ
 			return
 		}
 	}
+	
+	if !plan.Viewers.IsNull() && !plan.Viewers.IsUnknown() {
+		diags := plan.Viewers.ElementsAs(ctx, &viewers, false)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+
+	// Construir guest_properties si se especifican viewers
+	var guestProperties map[string]interface{}
+	if len(viewers) > 0 {
+		viewersMap := make(map[string]interface{})
+		for _, viewer := range viewers {
+			viewersMap[viewer] = map[string]interface{}{"options": nil}
+		}
+		guestProperties = map[string]interface{}{
+			"viewers": viewersMap,
+		}
+	}
 
 	// Crear el deployment usando la API
 	deploymentID, err := r.client.CreateDeployment(
@@ -288,7 +315,7 @@ func (r *deploymentResource) Create(ctx context.Context, req resource.CreateRequ
 		vcpus,
 		memory,
 		interfaces,
-		nil, // guest_properties
+		guestProperties,
 		nil, // image
 		userPermissions,
 	)
@@ -488,6 +515,22 @@ func (r *deploymentResource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 
 	updateData["allowed"] = allowed
+
+	// Actualizar guest_properties si se especifican viewers
+	if !plan.Viewers.IsNull() && !plan.Viewers.IsUnknown() {
+		var viewers []string
+		diags := plan.Viewers.ElementsAs(ctx, &viewers, false)
+		resp.Diagnostics.Append(diags...)
+		if !resp.Diagnostics.HasError() && len(viewers) > 0 {
+			viewersMap := make(map[string]interface{})
+			for _, viewer := range viewers {
+				viewersMap[viewer] = map[string]interface{}{"options": nil}
+			}
+			updateData["guest_properties"] = map[string]interface{}{
+				"viewers": viewersMap,
+			}
+		}
+	}
 
 	// Actualizar hardware si se especifica
 	if !plan.VCPUs.IsNull() || !plan.Memory.IsNull() || !plan.Interfaces.IsNull() {
