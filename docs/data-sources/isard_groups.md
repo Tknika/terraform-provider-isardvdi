@@ -1,3 +1,10 @@
+---
+page_title: "isard_groups Data Source - terraform-provider-isard"
+subcategory: ""
+description: |-
+  Retrieve groups from Isard VDI.
+---
+
 # Data Source: isard_groups
 
 Obtiene la lista de grupos disponibles en Isard VDI. Este data source es útil para encontrar grupos por nombre y obtener sus IDs para usarlos en recursos como `isard_deployment`.

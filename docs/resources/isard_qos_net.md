@@ -1,3 +1,10 @@
+---
+page_title: "isard_qos_net Resource - terraform-provider-isard"
+subcategory: ""
+description: |-
+  Manages QoS network configuration in Isard VDI.
+---
+
 # Resource: isard_qos_net
 
 Gestiona un perfil de Quality of Service (QoS) para redes en Isard VDI. **Requiere privilegios de administrador.**

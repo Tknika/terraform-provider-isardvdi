@@ -1,3 +1,10 @@
+---
+page_title: "isard_network Resource - terraform-provider-isard"
+subcategory: ""
+description: |-
+  Manages a network in Isard VDI.
+---
+
 # Resource: isard_network
 
 Gestiona una red virtual de usuario en Isard VDI.

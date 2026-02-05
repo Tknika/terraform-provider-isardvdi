@@ -1,3 +1,10 @@
+---
+page_title: "isard_network_interfaces Data Source - terraform-provider-isard"
+subcategory: ""
+description: |-
+  Retrieve network interfaces from Isard VDI.
+---
+
 # Data Source: isard_network_interfaces
 
 Obtiene la lista de interfaces de red del sistema disponibles en Isard VDI. **Requiere privilegios de administrador.**

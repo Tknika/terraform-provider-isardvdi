@@ -1,3 +1,10 @@
+---
+page_title: "isard_network_interface Resource - terraform-provider-isard"
+subcategory: ""
+description: |-
+  Manages a network interface in Isard VDI.
+---
+
 # Resource: isard_network_interface
 
 Gestiona una interfaz de red a nivel de sistema en Isard VDI. **Requiere privilegios de administrador.**

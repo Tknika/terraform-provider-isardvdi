@@ -2,7 +2,7 @@
 page_title: "isard_deployment Resource - terraform-provider-isard"
 subcategory: ""
 description: |-
-  Gestiona un deployment en Isard VDI
+  Manages a deployment in Isard VDI.
 ---
 
 # isard_deployment (Resource)

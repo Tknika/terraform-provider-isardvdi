@@ -1,3 +1,10 @@
+---
+page_title: "isard_templates Data Source - terraform-provider-isard"
+subcategory: ""
+description: |-
+  Retrieve templates from Isard VDI.
+---
+
 # Data Source: isard_templates
 
 Obtiene la lista de templates disponibles para el usuario autenticado en Isard VDI.

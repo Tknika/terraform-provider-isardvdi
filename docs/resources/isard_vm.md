@@ -1,3 +1,10 @@
+---
+page_title: "isard_vm Resource - terraform-provider-isard"
+subcategory: ""
+description: |-
+  Manages a persistent desktop in Isard VDI.
+---
+
 # Resource: isard_vm
 
 Gestiona un desktop persistente en Isard VDI.
