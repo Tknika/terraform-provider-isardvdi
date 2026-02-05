@@ -31,11 +31,6 @@ jobs:
         with:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.PASSPHRASE }}
-      - name: Prepare manifest file
-        run: |
-          TAG="${GITHUB_REF#refs/tags/}"
-          PROJECT_NAME="terraform-provider-isardvdi"
-          cp terraform-registry-manifest.json "${PROJECT_NAME}_${TAG}_manifest.json"
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
@@ -46,6 +41,11 @@ jobs:
           # GitHub sets the GITHUB_TOKEN secret automatically.
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
+      - name: Prepare and upload manifest file
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          PROJECT_NAME="terraform-provider-isardvdi"
+          cp terraform-registry-manifest.json "${PROJECT_NAME}_${TAG}_manifest.json"
       - name: Upload manifest to release
         uses: softprops/action-gh-release@v1
         with:
