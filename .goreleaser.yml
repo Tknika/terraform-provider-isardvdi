@@ -4,7 +4,6 @@ before:
   hooks:
     # this is just an example and not a requirement for provider building/publishing
     - go mod tidy
-    - sh -c 'cp terraform-registry-manifest.json {{ .ProjectName }}_{{ .Version }}_manifest.json || true'
 builds:
   - env:
       # goreleaser does not work with CGO, it could also complicate
@@ -49,8 +48,6 @@ signs:
       - "--detach-sign"
       - "${artifact}"
 release:
-  extra_files:
-    - glob: '{{ .ProjectName }}_{{ .Version }}_manifest.json'
   # If you want to manually examine the release before its live, uncomment this line:
   # draft: true
 changelog:
