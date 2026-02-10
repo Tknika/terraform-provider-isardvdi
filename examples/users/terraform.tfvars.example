@@ -1,0 +1,6 @@
+# Copia este archivo a terraform.tfvars y completa con tus valores
+isard_endpoint  = "isard.example.com"
+auth_method     = "token"
+isard_token     = "your-api-token-here"
+search_username = "admin"
+group_id        = "default-default-default"
