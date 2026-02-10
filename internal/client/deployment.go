@@ -55,6 +55,8 @@ func (c *Client) CreateDeployment(
 	guestProperties map[string]interface{},
 	image map[string]interface{},
 	userPermissions []string,
+	isos []string,
+	floppies []string,
 ) (string, error) {
 	reqURL := fmt.Sprintf("https://%s/api/v3/deployments", c.HostURL)
 
@@ -98,11 +100,26 @@ func (c *Client) CreateDeployment(
 	if disks, ok := templateHardware["disks"]; ok {
 		hardware["disks"] = disks
 	}
-	if floppies, ok := templateHardware["floppies"]; ok {
-		hardware["floppies"] = floppies
+	
+	// ISOs y Floppies: usar valores especificados o del template
+	if len(isos) > 0 {
+		isoList := make([]map[string]interface{}, len(isos))
+		for i, isoID := range isos {
+			isoList[i] = map[string]interface{}{"id": isoID}
+		}
+		hardware["isos"] = isoList
+	} else if templateISOs, ok := templateHardware["isos"]; ok {
+		hardware["isos"] = templateISOs
 	}
-	if isos, ok := templateHardware["isos"]; ok {
-		hardware["isos"] = isos
+	
+	if len(floppies) > 0 {
+		floppyList := make([]map[string]interface{}, len(floppies))
+		for i, floppyID := range floppies {
+			floppyList[i] = map[string]interface{}{"id": floppyID}
+		}
+		hardware["floppies"] = floppyList
+	} else if templateFloppies, ok := templateHardware["floppies"]; ok {
+		hardware["floppies"] = templateFloppies
 	}
 	
 	// Siempre incluir videos - requerido por la API

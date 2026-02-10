@@ -215,10 +215,14 @@ func (r *mediaResource) Read(ctx context.Context, req resource.ReadRequest, resp
 
 	media, err := r.client.GetMedia(state.ID.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error leyendo el media",
-			fmt.Sprintf("No se pudo leer el media (ID: %s): %s", state.ID.ValueString(), err.Error()),
-		)
+		// Si el media no se encuentra, eliminarlo del state
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
+	// Si el media está en estado "deleted", eliminarlo del state
+	if media.Status == "deleted" {
+		resp.State.RemoveResource(ctx)
 		return
 	}
 
@@ -259,7 +263,27 @@ func (r *mediaResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 		return
 	}
 
-	err := r.client.DeleteMedia(state.ID.ValueString())
+	// Primero verificar el estado actual del media
+	media, err := r.client.GetMedia(state.ID.ValueString())
+	if err != nil {
+		// Si el media no existe, no hay nada que eliminar
+		resp.Diagnostics.AddWarning(
+			"Media no encontrado",
+			fmt.Sprintf("El media (ID: %s) no se encontró, puede haber sido eliminado manualmente", state.ID.ValueString()),
+		)
+		return
+	}
+
+	// Si ya está en estado deleted, no intentar eliminarlo
+	if media.Status == "deleted" {
+		resp.Diagnostics.AddWarning(
+			"Media ya eliminado",
+			fmt.Sprintf("El media (ID: %s) ya está en estado 'deleted'", state.ID.ValueString()),
+		)
+		return
+	}
+
+	err = r.client.DeleteMedia(state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error eliminando el media",

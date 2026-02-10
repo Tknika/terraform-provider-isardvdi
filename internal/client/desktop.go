@@ -28,10 +28,12 @@ type HardwareSpec struct {
 	Graphics   []string `json:"graphics,omitempty"`
 	Videos     []string `json:"videos,omitempty"`
 	Interfaces []string `json:"interfaces,omitempty"`
+	ISOs       []map[string]interface{} `json:"isos,omitempty"`
+	Floppies   []map[string]interface{} `json:"floppies,omitempty"`
 }
 
 // CreatePersistentDesktop crea un nuevo persistent desktop
-func (c *Client) CreatePersistentDesktop(name, description, templateID string, vcpus *int64, memory *float64, interfaces []string) (string, error) {
+func (c *Client) CreatePersistentDesktop(name, description, templateID string, vcpus *int64, memory *float64, interfaces []string, isos []string, floppies []string) (string, error) {
 	reqURL := fmt.Sprintf("https://%s/api/v3/persistent_desktop", c.HostURL)
 
 	// Construir el payload
@@ -45,7 +47,7 @@ func (c *Client) CreatePersistentDesktop(name, description, templateID string, v
 	}
 
 	// Agregar hardware personalizado si se especifica
-	if vcpus != nil || memory != nil || len(interfaces) > 0 {
+	if vcpus != nil || memory != nil || len(interfaces) > 0 || len(isos) > 0 || len(floppies) > 0 {
 		hardware := make(map[string]interface{})
 		if vcpus != nil {
 			hardware["vcpus"] = *vcpus
@@ -55,6 +57,20 @@ func (c *Client) CreatePersistentDesktop(name, description, templateID string, v
 		}
 		if len(interfaces) > 0 {
 			hardware["interfaces"] = interfaces
+		}
+		if len(isos) > 0 {
+			isoList := make([]map[string]interface{}, len(isos))
+			for i, isoID := range isos {
+				isoList[i] = map[string]interface{}{"id": isoID}
+			}
+			hardware["isos"] = isoList
+		}
+		if len(floppies) > 0 {
+			floppyList := make([]map[string]interface{}, len(floppies))
+			for i, floppyID := range floppies {
+				floppyList[i] = map[string]interface{}{"id": floppyID}
+			}
+			hardware["floppies"] = floppyList
 		}
 		payload["hardware"] = hardware
 	}

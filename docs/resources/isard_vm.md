@@ -92,6 +92,48 @@ resource "isard_vm" "produccion" {
 }
 ```
 
+### Con Medios ISOs Adjuntos
+
+```hcl
+# Buscar ISOs disponibles
+data "isard_medias" "ubuntu_iso" {
+  name_filter = "Ubuntu"
+  kind        = "iso"
+  status      = "Downloaded"
+}
+
+resource "isard_vm" "con_iso" {
+  name        = "desktop-con-iso"
+  description = "Desktop con ISO adjunto"
+  template_id = data.isard_templates.ubuntu.templates[0].id
+  
+  # Adjuntar ISO de Ubuntu
+  isos = length(data.isard_medias.ubuntu_iso.medias) > 0 ? [
+    data.isard_medias.ubuntu_iso.medias[0].id
+  ] : []
+}
+```
+
+### Con Múltiples ISOs
+
+```hcl
+resource "isard_vm" "con_multiples_isos" {
+  name        = "desktop-herramientas"
+  description = "Desktop con múltiples ISOs de herramientas"
+  template_id = data.isard_templates.ubuntu.templates[0].id
+  
+  vcpus  = 4
+  memory = 8
+  
+  # Adjuntar múltiples ISOs
+  isos = [
+    "iso-instalacion-id",
+    "iso-drivers-id",
+    "iso-herramientas-id"
+  ]
+}
+```
+
 ## Argumentos
 
 Los siguientes argumentos son soportados:
@@ -107,6 +149,8 @@ Los siguientes argumentos son soportados:
 - `vcpus` - (Opcional) Número de CPUs virtuales. Si no se especifica, usa el valor del template.
 - `memory` - (Opcional) Memoria RAM en GB. Si no se especifica, usa el valor del template.
 - `interfaces` - (Opcional) Lista de IDs de interfaces de red a usar. Si no se especifica, usa las interfaces del template.
+- `isos` - (Opcional) Lista de IDs de medios ISO a adjuntar al desktop. Estos aparecerán como unidades de CD/DVD en la VM.
+- `floppies` - (Opcional) Lista de IDs de medios floppy a adjuntar al desktop. Raramente usado en VMs modernas.
 - `force_stop_on_destroy` - (Opcional) Si es `true`, detiene la máquina virtual antes de eliminarla y espera hasta 120 segundos a que se detenga completamente. Por defecto: `false`. Esto es útil para asegurar que la VM se apague de manera ordenada antes de la eliminación y prevenir errores de eliminación causados por VMs en ejecución.
 
 ## Atributos Exportados

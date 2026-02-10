@@ -108,6 +108,52 @@ resource "isard_deployment" "safe_destroy" {
   }
 }
 
+# Deployment con ISOs adjuntos
+resource "isard_deployment" "with_media" {
+  name         = "Deployment con ISOs"
+  description  = "Deployment con medios ISO adjuntos"
+  template_id  = "template-uuid-abc"
+  desktop_name = "Desktop con Media"
+  visible      = true
+  
+  # Adjuntar ISOs a todos los desktops
+  isos = [
+    "ubuntu-22.04-iso-id",
+    "drivers-iso-id"
+  ]
+
+  allowed {
+    groups = ["students-group-uuid"]
+  }
+}
+
+# Deployment con medios usando data source
+data "isard_medias" "installation_iso" {
+  name_filter = "Windows Server"
+  kind        = "iso"
+  status      = "Downloaded"
+}
+
+resource "isard_deployment" "windows_deployment" {
+  name         = "Deployment Windows"
+  description  = "Deployment con ISO de instalación"
+  template_id  = "windows-template-uuid"
+  desktop_name = "Windows Desktop"
+  visible      = true
+  
+  vcpus  = 4
+  memory = 8
+  
+  # Usar ISO del data source
+  isos = length(data.isard_medias.installation_iso.medias) > 0 ? [
+    data.isard_medias.installation_iso.medias[0].id
+  ] : []
+
+  allowed {
+    roles = ["admin", "advanced"]
+  }
+}
+
 # Deployment con todos los viewers disponibles
 resource "isard_deployment" "all_viewers" {
   name         = "Deployment Acceso Completo"
@@ -145,6 +191,8 @@ resource "isard_deployment" "all_viewers" {
 - `vcpus` (Number) Número de CPUs virtuales para los desktops. Si no se especifica, usa el valor del template.
 - `memory` (Number) Memoria RAM en GB para los desktops. Si no se especifica, usa el valor del template.
 - `interfaces` (List of String) Lista de IDs de interfaces de red a utilizar. Si no se especifica, usa las del template.
+- `isos` (List of String) Lista de IDs de medios ISO a adjuntar a los desktops del deployment. Estos aparecerán como unidades de CD/DVD en cada VM creada.
+- `floppies` (List of String) Lista de IDs de medios floppy a adjuntar a los desktops del deployment. Raramente usado en VMs modernas.
 - `viewers` (List of String) Lista de viewers habilitados para los desktops. Si no se especifica, usa los viewers del template. Valores disponibles:
   - `browser_rdp` - Visor RDP en el navegador
   - `browser_vnc` - Visor VNC en el navegador (noVNC)
