@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 )
 
 // Desktop representa la estructura de un desktop en la API
@@ -196,4 +197,102 @@ func (c *Client) DeleteDesktop(desktopID string) error {
 	}
 
 	return fmt.Errorf("error eliminando desktop (status %d): %s", res.StatusCode, string(body))
+}
+
+// StopDesktop detiene un desktop
+func (c *Client) StopDesktop(desktopID string) error {
+	reqURL := fmt.Sprintf("https://%s/api/v3/desktop/stop/%s", c.HostURL, desktopID)
+
+	req, err := http.NewRequest("GET", reqURL, nil)
+	if err != nil {
+		return fmt.Errorf("error creando la petición GET: %w", err)
+	}
+
+	req.Header.Set("Authorization", "Bearer "+c.Token)
+	req.Header.Set("Content-Type", "application/json")
+
+	res, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("error ejecutando GET: %w", err)
+	}
+	defer res.Body.Close()
+
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		return fmt.Errorf("error leyendo respuesta: %w", err)
+	}
+
+	if res.StatusCode != http.StatusOK {
+		return fmt.Errorf("error deteniendo desktop (status %d): %s", res.StatusCode, string(body))
+	}
+
+	return nil
+}
+
+// GetDesktopStatus obtiene el estado actual de un desktop
+func (c *Client) GetDesktopStatus(desktopID string) (string, error) {
+	reqURL := fmt.Sprintf("https://%s/api/v3/domain/info/%s", c.HostURL, desktopID)
+
+	req, err := http.NewRequest("GET", reqURL, nil)
+	if err != nil {
+		return "", fmt.Errorf("error creando la petición GET: %w", err)
+	}
+
+	req.Header.Set("Authorization", "Bearer "+c.Token)
+	req.Header.Set("Content-Type", "application/json")
+
+	res, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("error ejecutando GET: %w", err)
+	}
+	defer res.Body.Close()
+
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		return "", fmt.Errorf("error leyendo respuesta: %w", err)
+	}
+
+	if res.StatusCode == http.StatusNotFound {
+		return "not_found", nil
+	}
+
+	if res.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("error obteniendo estado del desktop (status %d): %s", res.StatusCode, string(body))
+	}
+
+	var response map[string]interface{}
+	if err := json.Unmarshal(body, &response); err != nil {
+		return "", fmt.Errorf("error parseando respuesta JSON: %w", err)
+	}
+
+	if status, ok := response["status"].(string); ok {
+		return status, nil
+	}
+
+	return "unknown", nil
+}
+
+// WaitForDesktopStopped espera a que un desktop se detenga completamente
+func (c *Client) WaitForDesktopStopped(desktopID string, maxWaitSeconds int) error {
+	ticker := time.NewTicker(2 * time.Second)
+	defer ticker.Stop()
+	
+	timeout := time.After(time.Duration(maxWaitSeconds) * time.Second)
+	
+	for {
+		select {
+		case <-timeout:
+			return fmt.Errorf("timeout esperando a que se detenga el desktop después de %d segundos", maxWaitSeconds)
+		case <-ticker.C:
+			status, err := c.GetDesktopStatus(desktopID)
+			if err != nil {
+				return fmt.Errorf("error obteniendo estado del desktop: %w", err)
+			}
+			
+			// Estados que indican que el desktop está detenido
+			if status == "Stopped" || status == "stopped" || status == "Shutdown" || status == "shutdown" {
+				return nil
+			}
+		}
+	}
 }

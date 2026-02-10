@@ -79,6 +79,19 @@ resource "isard_vm" "con_red" {
 }
 ```
 
+### Con Force Stop on Destroy
+
+```hcl
+resource "isard_vm" "produccion" {
+  name        = "desktop-produccion"
+  description = "Desktop de producción con stop seguro"
+  template_id = data.isard_templates.ubuntu.templates[0].id
+  
+  # Detener la VM antes de eliminarla para evitar pérdida de datos
+  force_stop_on_destroy = true
+}
+```
+
 ## Argumentos
 
 Los siguientes argumentos son soportados:
@@ -94,6 +107,7 @@ Los siguientes argumentos son soportados:
 - `vcpus` - (Opcional) Número de CPUs virtuales. Si no se especifica, usa el valor del template.
 - `memory` - (Opcional) Memoria RAM en GB. Si no se especifica, usa el valor del template.
 - `interfaces` - (Opcional) Lista de IDs de interfaces de red a usar. Si no se especifica, usa las interfaces del template.
+- `force_stop_on_destroy` - (Opcional) Si es `true`, detiene la máquina virtual antes de eliminarla y espera hasta 120 segundos a que se detenga completamente. Por defecto: `false`. Esto es útil para asegurar que la VM se apague de manera ordenada antes de la eliminación y prevenir errores de eliminación causados por VMs en ejecución.
 
 ## Atributos Exportados
 
@@ -134,10 +148,23 @@ Actualmente no está implementado. Cualquier cambio en los atributos requerirá 
 ### Delete
 
 Al eliminar un desktop:
-1. Se elimina permanentemente usando `DELETE /api/v3/desktop/{id}/true`
-2. El parámetro `true` indica eliminación permanente (no enviar a papelera)
+1. Si `force_stop_on_destroy` es `true`:
+   - Se detiene la VM usando `GET /api/v3/desktop/stop/{id}`
+   - Se espera hasta 120 segundos a que la VM se detenga completamente
+   - Si el stop o la espera fallan, se muestra una advertencia pero se continúa
+2. Se elimina permanentemente usando `DELETE /api/v3/desktop/{id}/true`
+3. El parámetro `true` indica eliminación permanente (no enviar a papelera)
 
 ## Notas Importantes
+
+### Force Stop on Destroy
+
+Si `force_stop_on_destroy` está habilitado, Terraform:
+1. Detendrá la VM antes de eliminarla
+2. Esperará hasta 120 segundos a que la VM se detenga completamente
+3. Procederá con la eliminación del desktop
+
+Esto asegura un apagado ordenado y previene errores de eliminación causados por VMs en ejecución. Si el stop o la espera fallan, Terraform mostrará una advertencia pero continuará con la eliminación.
 
 ### Hardware Personalizado
 

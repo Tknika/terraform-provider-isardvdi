@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -30,13 +31,14 @@ type vmResource struct {
 
 // vmResourceModel maps the resource schema data.
 type vmResourceModel struct {
-	ID          types.String  `tfsdk:"id"`
-	Name        types.String  `tfsdk:"name"`
-	Description types.String  `tfsdk:"description"`
-	TemplateID  types.String  `tfsdk:"template_id"`
-	VCPUs       types.Int64   `tfsdk:"vcpus"`
-	Memory      types.Float64 `tfsdk:"memory"`
-	Interfaces  types.List    `tfsdk:"interfaces"`
+	ID                 types.String  `tfsdk:"id"`
+	Name               types.String  `tfsdk:"name"`
+	Description        types.String  `tfsdk:"description"`
+	TemplateID         types.String  `tfsdk:"template_id"`
+	VCPUs              types.Int64   `tfsdk:"vcpus"`
+	Memory             types.Float64 `tfsdk:"memory"`
+	Interfaces         types.List    `tfsdk:"interfaces"`
+	ForceStopOnDestroy types.Bool    `tfsdk:"force_stop_on_destroy"`
 }
 
 // Metadata returns the resource type name.
@@ -83,6 +85,12 @@ func (r *vmResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *r
 				ElementType:         types.StringType,
 				Optional:            true,
 				MarkdownDescription: "Lista de IDs de interfaces de red a utilizar (por defecto usa las del template)",
+			},
+			"force_stop_on_destroy": schema.BoolAttribute{
+				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(false),
+				MarkdownDescription: "Si es true, detiene la máquina virtual antes de eliminarla (por defecto: false)",
 			},
 		},
 	}
@@ -228,6 +236,26 @@ func (r *vmResource) Delete(ctx context.Context, req resource.DeleteRequest, res
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	// Si force_stop_on_destroy es true, detener la VM primero
+	if !state.ForceStopOnDestroy.IsNull() && state.ForceStopOnDestroy.ValueBool() {
+		err := r.client.StopDesktop(state.ID.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddWarning(
+				"Advertencia al detener la máquina virtual",
+				fmt.Sprintf("No se pudo detener la VM (ID: %s): %s. Se procederá con la eliminación.", state.ID.ValueString(), err.Error()),
+			)
+		} else {
+			// Esperar a que la VM se detenga completamente (máximo 120 segundos)
+			err = r.client.WaitForDesktopStopped(state.ID.ValueString(), 120)
+			if err != nil {
+				resp.Diagnostics.AddWarning(
+					"Advertencia al esperar el stop de la VM",
+					fmt.Sprintf("Timeout o error esperando a que se detenga la VM (ID: %s): %s. Se procederá con la eliminación.", state.ID.ValueString(), err.Error()),
+				)
+			}
+		}
 	}
 
 	// Eliminar el desktop usando la API
