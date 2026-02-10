@@ -157,6 +157,7 @@ func (p *IsardProvider) Resources(_ context.Context) []func() resource.Resource 
 		NewNetworkResource,
 		NewQoSNetResource,
 		NewNetworkInterfaceResource,
+		NewMediaResource,
 	}
 }
 
