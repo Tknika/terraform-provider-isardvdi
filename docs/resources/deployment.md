@@ -92,6 +92,22 @@ resource "isard_deployment" "custom_viewers" {
   }
 }
 
+# Deployment con force_stop_on_destroy habilitado
+resource "isard_deployment" "safe_destroy" {
+  name         = "Deployment con Stop Automático"
+  description  = "Las VMs se detendrán antes de eliminar"
+  template_id  = "template-uuid-xyz"
+  desktop_name = "Desktop Safe"
+  visible      = true
+  
+  # Detener todas las VMs antes de eliminar el deployment
+  force_stop_on_destroy = true
+
+  allowed {
+    groups = ["production-team-uuid"]
+  }
+}
+
 # Deployment con todos los viewers disponibles
 resource "isard_deployment" "all_viewers" {
   name         = "Deployment Acceso Completo"
@@ -136,6 +152,7 @@ resource "isard_deployment" "all_viewers" {
   - `file_rdpvpn` - Archivo RDP con VPN
   - `file_spice` - Visor SPICE (archivo de configuración)
 - `user_permissions` (List of String) Lista de permisos de usuario para el deployment.
+- `force_stop_on_destroy` (Boolean) Si es `true`, detiene todas las máquinas virtuales del deployment antes de eliminarlo y espera hasta 120 segundos a que se detengan completamente. Por defecto: `false`. Esto es útil para asegurar que todas las VMs se apaguen de manera ordenada antes de la eliminación del deployment y prevenir errores de eliminación causados por VMs en ejecución.
 
 ### Atributos de Solo Lectura
 
@@ -201,4 +218,10 @@ terraform import isard_deployment.example deployment-uuid-123
 - **Hardware:** Si especificas `vcpus`, `memory` o `interfaces`, estos valores sobrescriben los del template para todos los desktops del deployment.
 - **Visibilidad:** El atributo `visible` controla si los desktops son visibles inmediatamente para los usuarios o si están ocultos hasta que sean habilitados.
 - **Eliminación:** Al eliminar un deployment, todos los desktops asociados también serán eliminados permanentemente.
+- **Force Stop on Destroy:** Si `force_stop_on_destroy` está habilitado, Terraform:
+  1. Detendrá todas las VMs del deployment
+  2. Esperará hasta 120 segundos a que todas las VMs se detengan completamente
+  3. Procederá con la eliminación del deployment
+  
+  Esto asegura un apagado ordenado y previene errores de eliminación causados por VMs en ejecución. Si el stop o la espera fallan, Terraform mostrará una advertencia pero continuará con la eliminación.
 - **Actualización:** Algunos cambios en el deployment pueden requerir que los desktops estén detenidos. Terraform te informará si esto es necesario.

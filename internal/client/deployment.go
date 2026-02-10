@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 )
 
 // Deployment representa la estructura de un deployment en la API
@@ -421,6 +422,31 @@ func (c *Client) StopDeployment(deploymentID string) error {
 	}
 
 	return nil
+}
+
+// WaitForDeploymentStopped espera a que todas las VMs del deployment se detengan
+func (c *Client) WaitForDeploymentStopped(deploymentID string, maxWaitSeconds int) error {
+	ticker := time.NewTicker(2 * time.Second)
+	defer ticker.Stop()
+	
+	timeout := time.After(time.Duration(maxWaitSeconds) * time.Second)
+	
+	for {
+		select {
+		case <-timeout:
+			return fmt.Errorf("timeout esperando a que se detengan las VMs del deployment después de %d segundos", maxWaitSeconds)
+		case <-ticker.C:
+			deploymentInfo, err := c.GetDeployment(deploymentID)
+			if err != nil {
+				return fmt.Errorf("error obteniendo información del deployment: %w", err)
+			}
+			
+			// Verificar si todas las VMs están detenidas
+			if deploymentInfo.StartedDesktops == 0 && deploymentInfo.CreatingDesktops == 0 {
+				return nil
+			}
+		}
+	}
 }
 
 // GetTemplateInfo obtiene información del template necesaria para crear deployments

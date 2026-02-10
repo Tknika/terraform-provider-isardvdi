@@ -36,18 +36,19 @@ type deploymentResource struct {
 
 // deploymentResourceModel maps the resource schema data.
 type deploymentResourceModel struct {
-	ID              types.String `tfsdk:"id"`
-	Name            types.String `tfsdk:"name"`
-	Description     types.String `tfsdk:"description"`
-	TemplateID      types.String `tfsdk:"template_id"`
-	DesktopName     types.String `tfsdk:"desktop_name"`
-	Visible         types.Bool   `tfsdk:"visible"`
-	Allowed         types.Object `tfsdk:"allowed"`
-	VCPUs           types.Int64  `tfsdk:"vcpus"`
-	Memory          types.Float64 `tfsdk:"memory"`
-	Interfaces      types.List   `tfsdk:"interfaces"`
-	UserPermissions types.List   `tfsdk:"user_permissions"`
-	Viewers         types.List   `tfsdk:"viewers"`
+	ID                 types.String `tfsdk:"id"`
+	Name               types.String `tfsdk:"name"`
+	Description        types.String `tfsdk:"description"`
+	TemplateID         types.String `tfsdk:"template_id"`
+	DesktopName        types.String `tfsdk:"desktop_name"`
+	Visible            types.Bool   `tfsdk:"visible"`
+	Allowed            types.Object `tfsdk:"allowed"`
+	VCPUs              types.Int64  `tfsdk:"vcpus"`
+	Memory             types.Float64 `tfsdk:"memory"`
+	Interfaces         types.List   `tfsdk:"interfaces"`
+	UserPermissions    types.List   `tfsdk:"user_permissions"`
+	Viewers            types.List   `tfsdk:"viewers"`
+	ForceStopOnDestroy types.Bool   `tfsdk:"force_stop_on_destroy"`
 }
 
 // Metadata returns the resource type name.
@@ -150,6 +151,12 @@ func (r *deploymentResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				ElementType:         types.StringType,
 				Optional:            true,
 				MarkdownDescription: "Lista de viewers habilitados (ej: ['browser_vnc', 'file_spice', 'file_rdpgw', 'browser_rdp']). Si no se especifica, se usan los del template.",
+			},
+			"force_stop_on_destroy": schema.BoolAttribute{
+				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(false),
+				MarkdownDescription: "Si es true, detiene todas las máquinas virtuales del deployment antes de eliminarlo (por defecto: false)",
 			},
 		},
 	}
@@ -582,6 +589,26 @@ func (r *deploymentResource) Delete(ctx context.Context, req resource.DeleteRequ
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	// Si force_stop_on_destroy es true, detener todas las VMs del deployment primero
+	if !state.ForceStopOnDestroy.IsNull() && state.ForceStopOnDestroy.ValueBool() {
+		err := r.client.StopDeployment(state.ID.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddWarning(
+				"Advertencia al detener desktops del deployment",
+				fmt.Sprintf("No se pudieron detener todos los desktops del deployment (ID: %s): %s. Se procederá con la eliminación.", state.ID.ValueString(), err.Error()),
+			)
+		} else {
+			// Esperar a que las VMs se detengan completamente (máximo 120 segundos)
+			err = r.client.WaitForDeploymentStopped(state.ID.ValueString(), 120)
+			if err != nil {
+				resp.Diagnostics.AddWarning(
+					"Advertencia al esperar el stop de desktops",
+					fmt.Sprintf("Timeout o error esperando a que se detengan las VMs del deployment (ID: %s): %s. Se procederá con la eliminación.", state.ID.ValueString(), err.Error()),
+				)
+			}
+		}
 	}
 
 	// Eliminar el deployment usando la API (permanent=true)
