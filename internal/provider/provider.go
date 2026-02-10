@@ -168,5 +168,6 @@ func (p *IsardProvider) DataSources(_ context.Context) []func() datasource.DataS
 		NewNetworkInterfacesDataSource,
 		NewGroupsDataSource,
 		NewUsersDataSource,
+		NewMediasDataSource,
 	}
 }
