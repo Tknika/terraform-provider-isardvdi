@@ -28,12 +28,13 @@ type IsardProvider struct {
 
 // IsardProviderModel describes the provider data model.
 type IsardProviderModel struct {
-	Endpoint    types.String `tfsdk:"endpoint"`
-	AuthMethod  types.String `tfsdk:"auth_method"`
-	CathegoryID types.String `tfsdk:"cathegory_id"`
-	Token       types.String `tfsdk:"token"`
-	Username    types.String `tfsdk:"username"`
-	Password    types.String `tfsdk:"password"`
+	Endpoint        types.String `tfsdk:"endpoint"`
+	AuthMethod      types.String `tfsdk:"auth_method"`
+	CathegoryID     types.String `tfsdk:"cathegory_id"`
+	Token           types.String `tfsdk:"token"`
+	Username        types.String `tfsdk:"username"`
+	Password        types.String `tfsdk:"password"`
+	SSLVerification types.Bool   `tfsdk:"ssl_verification"`
 }
 
 func New(version string) func() provider.Provider {
@@ -84,6 +85,10 @@ func (p *IsardProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp
 				Optional:            true,
 				Sensitive:           true,
 			},
+			"ssl_verification": schema.BoolAttribute{
+				MarkdownDescription: "Enable SSL certificate verification. Set to false to disable SSL verification (useful for development with self-signed certificates). Default: true",
+				Optional:            true,
+			},
 		},
 	}
 }
@@ -101,6 +106,11 @@ func (p *IsardProvider) Configure(ctx context.Context, req provider.ConfigureReq
 
 	if data.CathegoryID.IsNull() {
 		data.CathegoryID = types.StringValue("default")
+	}
+
+	// Default ssl_verification to true if not specified
+	if data.SSLVerification.IsNull() {
+		data.SSLVerification = types.BoolValue(true)
 	}
 
 	if data.AuthMethod.ValueString() == "form" {
@@ -126,7 +136,7 @@ func (p *IsardProvider) Configure(ctx context.Context, req provider.ConfigureReq
 	// Configuration values are now available.
 
 	// Create the client
-	c := client.NewClient(data.Endpoint.ValueString(), data.Token.ValueString())
+	c := client.NewClient(data.Endpoint.ValueString(), data.Token.ValueString(), data.SSLVerification.ValueBool())
 
 	// Authenticate
 	// SignIn manejará "salm" y "form". Si es "token", no hará nada (ya tenemos el token).

@@ -21,11 +21,10 @@ type Client struct {
 }
 
 // NewClient creates a new client
-func NewClient(host, token string) *Client {
-	// Configurar transporte HTTP para omitir verificación de certificados SSL
-	// NOTA: Solo para desarrollo/pruebas. No usar en producción.
+func NewClient(host, token string, sslVerification bool) *Client {
+	// Configurar transporte HTTP con opción de verificación SSL configurable
 	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: !sslVerification},
 	}
 	
 	return &Client{

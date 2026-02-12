@@ -88,6 +88,7 @@ provider "isard" {
   cathegory_id = "default"
   username     = "admin"
   password     = "IsardVDI"
+  # ssl_verification = false  # Descomenta para desarrollo con certificados autofirmados
 }
 
 # Obtener templates disponibles
