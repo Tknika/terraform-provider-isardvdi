@@ -358,7 +358,7 @@ func (c *Client) ForceStopDesktop(desktopID string) error {
 		return fmt.Errorf("error leyendo respuesta: %w", err)
 	}
 
-	if res.StatusCode != http.StatusOK {
+	if res.StatusCode < 200 || res.StatusCode >= 300 {
 		return fmt.Errorf("error forzando parada del desktop (status %d): %s", res.StatusCode, string(body))
 	}
 
