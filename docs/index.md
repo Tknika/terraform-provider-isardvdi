@@ -14,11 +14,12 @@ El provider de Isard permite gestionar recursos en Isard VDI mediante Terraform.
 
 ```hcl
 provider "isard" {
-  endpoint     = "localhost"
-  auth_method  = "form"
-  cathegory_id = "default"
-  username     = "admin"
-  password     = "IsardVDI"
+  endpoint         = "localhost"
+  auth_method      = "form"
+  cathegory_id     = "default"
+  username         = "admin"
+  password         = "IsardVDI"
+  ssl_verification = false  # Para desarrollo local con certificados autofirmados
 }
 ```
 
@@ -30,6 +31,20 @@ provider "isard" {
   auth_method  = "token"
   token        = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
   cathegory_id = "default"
+  # ssl_verification por defecto es true (recomendado para producción)
+}
+```
+
+### Producción con SSL Validado
+
+```hcl
+provider "isard" {
+  endpoint         = "isard.empresa.com"
+  auth_method      = "form"
+  cathegory_id     = "default"
+  username         = var.isard_username
+  password         = var.isard_password
+  ssl_verification = true  # Valida certificados SSL (default)
 }
 ```
 
@@ -42,6 +57,10 @@ Los siguientes argumentos son soportados:
 - `endpoint` - (Requerido) El hostname o IP del servidor Isard VDI (sin protocolo, se usa HTTPS automáticamente)
 - `auth_method` - (Requerido) Método de autenticación. Valores aceptados: `"form"` o `"token"`
 - `cathegory_id` - (Requerido) ID de la categoría en Isard VDI
+
+### Opcionales
+
+- `ssl_verification` - (Opcional) Habilita la verificación de certificados SSL. Establece a `false` para deshabilitar la verificación SSL (útil para desarrollo con certificados autofirmados). Por defecto: `true`. **Recomendación:** Mantener en `true` para entornos de producción.
 
 ### Opcionales según método de autenticación
 
@@ -58,7 +77,22 @@ Nota: Opcionalmente se puede especificar `token` junto con `auth_method = "form"
 
 ## Configuración SSL
 
-El provider está configurado para omitir la verificación de certificados SSL (desarrollo). Para entornos de producción, se recomienda modificar el código para validar certificados.
+Por defecto, el provider valida los certificados SSL del servidor Isard VDI (`ssl_verification = true`), lo cual es la configuración recomendada para entornos de producción.
+
+Para entornos de desarrollo con certificados autofirmados, puedes deshabilitar la verificación SSL:
+
+```hcl
+provider "isard" {
+  endpoint         = "localhost"
+  auth_method      = "form"
+  cathegory_id     = "default"
+  username         = "admin"
+  password         = "IsardVDI"
+  ssl_verification = false  # Solo para desarrollo
+}
+```
+
+**Advertencia de Seguridad:** Deshabilitar la verificación SSL (`ssl_verification = false`) hace que las conexiones sean vulnerables a ataques man-in-the-middle. Solo debe usarse en entornos de desarrollo controlados.
 
 ## Variables de Entorno
 
@@ -66,11 +100,12 @@ Puedes usar variables de entorno en lugar de especificar credenciales directamen
 
 ```hcl
 provider "isard" {
-  endpoint     = var.isard_endpoint
-  auth_method  = var.isard_auth_method
-  username     = var.isard_username
-  password     = var.isard_password
-  cathegory_id = var.isard_category
+  endpoint         = var.isard_endpoint
+  auth_method      = var.isard_auth_method
+  username         = var.isard_username
+  password         = var.isard_password
+  cathegory_id     = var.isard_category
+  ssl_verification = var.isard_ssl_verification
 }
 ```
 
@@ -80,6 +115,7 @@ export TF_VAR_isard_auth_method="form"
 export TF_VAR_isard_username="admin"
 export TF_VAR_isard_password="IsardVDI"
 export TF_VAR_isard_category="default"
+export TF_VAR_isard_ssl_verification="false"  # Solo para desarrollo
 ```
 
 ## Recursos y Data Sources
