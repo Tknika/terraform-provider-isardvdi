@@ -59,7 +59,7 @@ go build -o terraform-provider-isardvdi
 ```hcl
 provider_installation {
   dev_overrides {
-    "tknika/isardvdi" = "/home/tu-usuario/source/isard-terraform-provider"
+    "tknika/isardvdi" = "/home/tu-usuario/source/terraform-provider-isardvdi"
   }
   direct {}
 }

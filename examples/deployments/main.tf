@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     isardvdi = {
-      source = "tknika/isard"
+      source = "tknika/isardvdi"
     }
   }
 }
