@@ -46,13 +46,13 @@ Provider de Terraform para gestionar recursos en Isard VDI a través de su API v
 
 1. Clonar el repositorio:
 ```bash
-git clone https://github.com/prubioamzubiri/isard-terraform-provider.git
-cd isard-terraform-provider
+git clone https://github.com/Tknika/terraform-provider-isardvdi.git
+cd terraform-provider-isardvdi
 ```
 
 2. Compilar el provider:
 ```bash
-go build -o terraform-provider-isard
+go build -o terraform-provider-isardvdi
 ```
 
 3. Configurar el override local en `~/.terraformrc`:
@@ -196,7 +196,7 @@ Consulta el directorio [examples/](examples/) para ver ejemplos completos de uso
 ### Compilar
 
 ```bash
-go build -o terraform-provider-isard
+go build -o terraform-provider-isardvdi
 ```
 
 ### Ejecutar Tests

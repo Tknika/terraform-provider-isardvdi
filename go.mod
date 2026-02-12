@@ -1,4 +1,4 @@
-module github.com/tknika/terraform-provider-isard
+module github.com/tknika/terraform-provider-isardvdi
 
 go 1.24.0
 

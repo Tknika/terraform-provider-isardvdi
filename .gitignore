@@ -51,6 +51,7 @@ test_*.tf
 *.tfplan
 
 terraform-provider-isard
+terraform-provider-isardvdi
 
 #keys
 *.asc
