@@ -151,7 +151,7 @@ Los siguientes argumentos son soportados:
 - `interfaces` - (Opcional) Lista de IDs de interfaces de red a usar. Si no se especifica, usa las interfaces del template.
 - `isos` - (Opcional) Lista de IDs de medios ISO a adjuntar al desktop. Estos aparecerán como unidades de CD/DVD en la VM.
 - `floppies` - (Opcional) Lista de IDs de medios floppy a adjuntar al desktop. Raramente usado en VMs modernas.
-- `force_stop_on_destroy` - (Opcional) Si es `true`, detiene la máquina virtual antes de eliminarla y espera hasta 120 segundos a que se detenga completamente. Por defecto: `false`. Esto es útil para asegurar que la VM se apague de manera ordenada antes de la eliminación y prevenir errores de eliminación causados por VMs en ejecución.
+- `force_stop_on_destroy` - (Opcional) Si es `true`, fuerza la parada de la máquina virtual antes de eliminarla usando el endpoint de administración (parada forzada) y espera hasta 10 segundos. Por defecto: `false`. La parada forzada garantiza que la VM se detenga inmediatamente, incluso si no responde, previniendo largos tiempos de espera durante la destrucción.
 
 ## Atributos Exportados
 
@@ -193,8 +193,10 @@ Actualmente no está implementado. Cualquier cambio en los atributos requerirá 
 
 Al eliminar un desktop:
 1. Si `force_stop_on_destroy` es `true`:
-   - Se detiene la VM usando `GET /api/v3/desktop/stop/{id}`
-   - Se espera hasta 120 segundos a que la VM se detenga completamente
+   - Se fuerza la parada de la VM usando `POST /api/v3/admin/multiple_actions` con action="stopping"
+   - Se verifica inmediatamente si ya está detenida (retorno instantáneo si lo está)
+   - Se espera hasta 10 segundos a que la VM se detenga completamente
+   - La parada forzada cambia el estado a "Stopping" (vs "Shutting-down" de soft stop)
    - Si el stop o la espera fallan, se muestra una advertencia pero se continúa
 2. Se elimina permanentemente usando `DELETE /api/v3/desktop/{id}/true`
 3. El parámetro `true` indica eliminación permanente (no enviar a papelera)
@@ -204,11 +206,12 @@ Al eliminar un desktop:
 ### Force Stop on Destroy
 
 Si `force_stop_on_destroy` está habilitado, Terraform:
-1. Detendrá la VM antes de eliminarla
-2. Esperará hasta 120 segundos a que la VM se detenga completamente
-3. Procederá con la eliminación del desktop
+1. Verificará inmediatamente si la VM ya está detenida (retorno instantáneo si lo está)
+2. Forzará la parada de la VM usando el endpoint de administración (parada inmediata)
+3. Esperará hasta 10 segundos a que la VM se detenga completamente
+4. Procederá con la eliminación del desktop
 
-Esto asegura un apagado ordenado y previene errores de eliminación causados por VMs en ejecución. Si el stop o la espera fallan, Terraform mostrará una advertencia pero continuará con la eliminación.
+La parada forzada utiliza el endpoint `/api/v3/admin/multiple_actions` que cambia el estado a "Stopping" en lugar de "Shutting-down", garantizando una detención inmediata. Esto resulta en tiempos de destrucción mucho más rápidos (típicamente 2-5 segundos) comparado con el soft stop tradicional. Si el stop o la espera fallan, Terraform mostrará una advertencia pero continuará con la eliminación.
 
 ### Hardware Personalizado
 

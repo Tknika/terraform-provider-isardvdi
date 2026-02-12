@@ -200,7 +200,7 @@ resource "isard_deployment" "all_viewers" {
   - `file_rdpvpn` - Archivo RDP con VPN
   - `file_spice` - Visor SPICE (archivo de configuración)
 - `user_permissions` (List of String) Lista de permisos de usuario para el deployment.
-- `force_stop_on_destroy` (Boolean) Si es `true`, detiene todas las máquinas virtuales del deployment antes de eliminarlo y espera hasta 120 segundos a que se detengan completamente. Por defecto: `false`. Esto es útil para asegurar que todas las VMs se apaguen de manera ordenada antes de la eliminación del deployment y prevenir errores de eliminación causados por VMs en ejecución.
+- `force_stop_on_destroy` (Boolean) Si es `true`, detiene todas las máquinas virtuales del deployment antes de eliminarlo usando parada forzada y espera hasta 120 segundos a que se detengan completamente. Por defecto: `false`. Nota: El proveedor también maneja automáticamente el error 428 (VMs no detenidas) reintentando la eliminación después de detener las VMs, incluso cuando este parámetro es `false`.
 
 ### Atributos de Solo Lectura
 
@@ -266,10 +266,12 @@ terraform import isard_deployment.example deployment-uuid-123
 - **Hardware:** Si especificas `vcpus`, `memory` o `interfaces`, estos valores sobrescriben los del template para todos los desktops del deployment.
 - **Visibilidad:** El atributo `visible` controla si los desktops son visibles inmediatamente para los usuarios o si están ocultos hasta que sean habilitados.
 - **Eliminación:** Al eliminar un deployment, todos los desktops asociados también serán eliminados permanentemente.
-- **Force Stop on Destroy:** Si `force_stop_on_destroy` está habilitado, Terraform:
-  1. Detendrá todas las VMs del deployment
-  2. Esperará hasta 120 segundos a que todas las VMs se detengan completamente
-  3. Procederá con la eliminación del deployment
+- **Manejo Automático de VMs en Ejecución:** Si al intentar eliminar un deployment las VMs están en ejecución (error 428), el proveedor automáticamente:
+  1. Detendrá todas las VMs del deployment usando parada forzada
+  2. Esperará hasta 60 segundos a que se detengan
+  3. Si no se detienen en ese tiempo, esperará 10 segundos adicionales
+  4. Reintentará la eliminación del deployment
   
-  Esto asegura un apagado ordenado y previene errores de eliminación causados por VMs en ejecución. Si el stop o la espera fallan, Terraform mostrará una advertencia pero continuará con la eliminación.
+  Este comportamiento es automático y no requiere configuración, funcionando independientemente del valor de `force_stop_on_destroy`.
+- **Force Stop on Destroy:** Si `force_stop_on_destroy` está habilitado, Terraform detendrá las VMs proactivamente antes de intentar eliminar. Esto puede ser más rápido en algunos casos, pero no es estrictamente necesario gracias al manejo automático del error 428.
 - **Actualización:** Algunos cambios en el deployment pueden requerir que los desktops estén detenidos. Terraform te informará si esto es necesario.
