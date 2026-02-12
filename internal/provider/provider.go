@@ -108,8 +108,8 @@ func (p *IsardProvider) Configure(ctx context.Context, req provider.ConfigureReq
 		data.CathegoryID = types.StringValue("default")
 	}
 
-	// Default ssl_verification to true if not specified
-	if data.SSLVerification.IsNull() {
+	// Default ssl_verification to true if not specified or unknown
+	if data.SSLVerification.IsNull() || data.SSLVerification.IsUnknown() {
 		data.SSLVerification = types.BoolValue(true)
 	}
 
