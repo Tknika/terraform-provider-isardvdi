@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/tknika/terraform-provider-isard/internal/client"
+	"github.com/tknika/terraform-provider-isardvdi/internal/client"
 )
 
 var _ datasource.DataSource = &templatesDataSource{}

@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/tknika/terraform-provider-isard/internal/client"
+	"github.com/tknika/terraform-provider-isardvdi/internal/client"
 )
 
 // Ensure the implementation satisfies the expected interfaces.

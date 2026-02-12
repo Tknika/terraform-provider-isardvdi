@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/tknika/terraform-provider-isard/internal/client"
+	"github.com/tknika/terraform-provider-isardvdi/internal/client"
 )
 
 // Ensure IsardProvider satisfies various provider interfaces.

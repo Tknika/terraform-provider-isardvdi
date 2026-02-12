@@ -6,7 +6,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
-	"github.com/tknika/terraform-provider-isard/internal/provider"
+	"github.com/tknika/terraform-provider-isardvdi/internal/provider"
 )
 
 // Run the docs generation tool, check its repository for more information on how it works and how docs

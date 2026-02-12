@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/tknika/terraform-provider-isard/internal/constants"
+	"github.com/tknika/terraform-provider-isardvdi/internal/constants"
 )
 
 // Client holds the connection information
