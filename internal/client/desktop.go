@@ -28,10 +28,12 @@ type HardwareSpec struct {
 	Graphics   []string `json:"graphics,omitempty"`
 	Videos     []string `json:"videos,omitempty"`
 	Interfaces []string `json:"interfaces,omitempty"`
+	ISOs       []map[string]interface{} `json:"isos,omitempty"`
+	Floppies   []map[string]interface{} `json:"floppies,omitempty"`
 }
 
 // CreatePersistentDesktop crea un nuevo persistent desktop
-func (c *Client) CreatePersistentDesktop(name, description, templateID string, vcpus *int64, memory *float64, interfaces []string) (string, error) {
+func (c *Client) CreatePersistentDesktop(name, description, templateID string, vcpus *int64, memory *float64, interfaces []string, isos []string, floppies []string) (string, error) {
 	reqURL := fmt.Sprintf("https://%s/api/v3/persistent_desktop", c.HostURL)
 
 	// Construir el payload
@@ -45,7 +47,7 @@ func (c *Client) CreatePersistentDesktop(name, description, templateID string, v
 	}
 
 	// Agregar hardware personalizado si se especifica
-	if vcpus != nil || memory != nil || len(interfaces) > 0 {
+	if vcpus != nil || memory != nil || len(interfaces) > 0 || len(isos) > 0 || len(floppies) > 0 {
 		hardware := make(map[string]interface{})
 		if vcpus != nil {
 			hardware["vcpus"] = *vcpus
@@ -55,6 +57,20 @@ func (c *Client) CreatePersistentDesktop(name, description, templateID string, v
 		}
 		if len(interfaces) > 0 {
 			hardware["interfaces"] = interfaces
+		}
+		if len(isos) > 0 {
+			isoList := make([]map[string]interface{}, len(isos))
+			for i, isoID := range isos {
+				isoList[i] = map[string]interface{}{"id": isoID}
+			}
+			hardware["isos"] = isoList
+		}
+		if len(floppies) > 0 {
+			floppyList := make([]map[string]interface{}, len(floppies))
+			for i, floppyID := range floppies {
+				floppyList[i] = map[string]interface{}{"id": floppyID}
+			}
+			hardware["floppies"] = floppyList
 		}
 		payload["hardware"] = hardware
 	}
@@ -274,6 +290,18 @@ func (c *Client) GetDesktopStatus(desktopID string) (string, error) {
 
 // WaitForDesktopStopped espera a que un desktop se detenga completamente
 func (c *Client) WaitForDesktopStopped(desktopID string, maxWaitSeconds int) error {
+	// Verificar inmediatamente si ya está detenido (antes de esperar)
+	status, err := c.GetDesktopStatus(desktopID)
+	if err != nil {
+		return fmt.Errorf("error obteniendo estado del desktop: %w", err)
+	}
+	
+	// Estados que indican que el desktop está detenido
+	if status == "Stopped" || status == "stopped" || status == "Shutdown" || status == "shutdown" || status == "Failed" || status == "failed" {
+		return nil
+	}
+	
+	// Si no está detenido, esperar con polling
 	ticker := time.NewTicker(2 * time.Second)
 	defer ticker.Stop()
 	
@@ -290,9 +318,49 @@ func (c *Client) WaitForDesktopStopped(desktopID string, maxWaitSeconds int) err
 			}
 			
 			// Estados que indican que el desktop está detenido
-			if status == "Stopped" || status == "stopped" || status == "Shutdown" || status == "shutdown" {
+			if status == "Stopped" || status == "stopped" || status == "Shutdown" || status == "shutdown" || status == "Failed" || status == "failed" {
 				return nil
 			}
 		}
 	}
+}
+
+// ForceStopDesktop fuerza la parada de un desktop usando el endpoint admin
+func (c *Client) ForceStopDesktop(desktopID string) error {
+	reqURL := fmt.Sprintf("https://%s/api/v3/admin/multiple_actions", c.HostURL)
+
+	payload := map[string]interface{}{
+		"ids":    []string{desktopID},
+		"action": "stopping",
+	}
+
+	jsonData, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("error codificando JSON: %w", err)
+	}
+
+	req, err := http.NewRequest("POST", reqURL, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return fmt.Errorf("error creando la petición POST: %w", err)
+	}
+
+	req.Header.Set("Authorization", "Bearer "+c.Token)
+	req.Header.Set("Content-Type", "application/json")
+
+	res, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("error ejecutando POST: %w", err)
+	}
+	defer res.Body.Close()
+
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		return fmt.Errorf("error leyendo respuesta: %w", err)
+	}
+
+	if res.StatusCode < 200 || res.StatusCode >= 300 {
+		return fmt.Errorf("error forzando parada del desktop (status %d): %s", res.StatusCode, string(body))
+	}
+
+	return nil
 }

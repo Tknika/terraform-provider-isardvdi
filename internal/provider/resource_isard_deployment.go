@@ -46,6 +46,8 @@ type deploymentResourceModel struct {
 	VCPUs              types.Int64  `tfsdk:"vcpus"`
 	Memory             types.Float64 `tfsdk:"memory"`
 	Interfaces         types.List   `tfsdk:"interfaces"`
+	ISOs               types.List   `tfsdk:"isos"`
+	Floppies           types.List   `tfsdk:"floppies"`
 	UserPermissions    types.List   `tfsdk:"user_permissions"`
 	Viewers            types.List   `tfsdk:"viewers"`
 	ForceStopOnDestroy types.Bool   `tfsdk:"force_stop_on_destroy"`
@@ -141,6 +143,16 @@ func (r *deploymentResource) Schema(_ context.Context, _ resource.SchemaRequest,
 					types.StringValue("wireguard"),
 				})),
 				MarkdownDescription: "Lista de IDs de interfaces de red a utilizar (por defecto: ['default', 'wireguard'])",
+			},
+			"isos": schema.ListAttribute{
+				ElementType:         types.StringType,
+				Optional:            true,
+				MarkdownDescription: "Lista de IDs de medios ISO a adjuntar a los desktops del deployment",
+			},
+			"floppies": schema.ListAttribute{
+				ElementType:         types.StringType,
+				Optional:            true,
+				MarkdownDescription: "Lista de IDs de medios floppy a adjuntar a los desktops del deployment",
 			},
 			"user_permissions": schema.ListAttribute{
 				ElementType:         types.StringType,
@@ -262,6 +274,8 @@ func (r *deploymentResource) Create(ctx context.Context, req resource.CreateRequ
 	var vcpus *int64
 	var memory *float64
 	var interfaces []string
+	var isos []string
+	var floppies []string
 	var userPermissions []string
 	var viewers []string
 	
@@ -277,6 +291,22 @@ func (r *deploymentResource) Create(ctx context.Context, req resource.CreateRequ
 	
 	if !plan.Interfaces.IsNull() && !plan.Interfaces.IsUnknown() {
 		diags := plan.Interfaces.ElementsAs(ctx, &interfaces, false)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+	
+	if !plan.ISOs.IsNull() && !plan.ISOs.IsUnknown() {
+		diags := plan.ISOs.ElementsAs(ctx, &isos, false)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+	
+	if !plan.Floppies.IsNull() && !plan.Floppies.IsUnknown() {
+		diags := plan.Floppies.ElementsAs(ctx, &floppies, false)
 		resp.Diagnostics.Append(diags...)
 		if resp.Diagnostics.HasError() {
 			return
@@ -325,6 +355,8 @@ func (r *deploymentResource) Create(ctx context.Context, req resource.CreateRequ
 		guestProperties,
 		nil, // image
 		userPermissions,
+		isos,
+		floppies,
 	)
 	if err != nil {
 		resp.Diagnostics.AddError(

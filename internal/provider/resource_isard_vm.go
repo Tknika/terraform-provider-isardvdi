@@ -38,6 +38,8 @@ type vmResourceModel struct {
 	VCPUs              types.Int64   `tfsdk:"vcpus"`
 	Memory             types.Float64 `tfsdk:"memory"`
 	Interfaces         types.List    `tfsdk:"interfaces"`
+	ISOs               types.List    `tfsdk:"isos"`
+	Floppies           types.List    `tfsdk:"floppies"`
 	ForceStopOnDestroy types.Bool    `tfsdk:"force_stop_on_destroy"`
 }
 
@@ -86,6 +88,16 @@ func (r *vmResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *r
 				Optional:            true,
 				MarkdownDescription: "Lista de IDs de interfaces de red a utilizar (por defecto usa las del template)",
 			},
+			"isos": schema.ListAttribute{
+				ElementType:         types.StringType,
+				Optional:            true,
+				MarkdownDescription: "Lista de IDs de medios ISO a adjuntar al desktop",
+			},
+			"floppies": schema.ListAttribute{
+				ElementType:         types.StringType,
+				Optional:            true,
+				MarkdownDescription: "Lista de IDs de medios floppy a adjuntar al desktop",
+			},
 			"force_stop_on_destroy": schema.BoolAttribute{
 				Optional:            true,
 				Computed:            true,
@@ -129,6 +141,8 @@ func (r *vmResource) Create(ctx context.Context, req resource.CreateRequest, res
 	var vcpus *int64
 	var memory *float64
 	var interfaces []string
+	var isos []string
+	var floppies []string
 	
 	if !plan.VCPUs.IsNull() && !plan.VCPUs.IsUnknown() {
 		v := plan.VCPUs.ValueInt64()
@@ -147,6 +161,22 @@ func (r *vmResource) Create(ctx context.Context, req resource.CreateRequest, res
 			return
 		}
 	}
+	
+	if !plan.ISOs.IsNull() && !plan.ISOs.IsUnknown() {
+		diags := plan.ISOs.ElementsAs(ctx, &isos, false)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+	
+	if !plan.Floppies.IsNull() && !plan.Floppies.IsUnknown() {
+		diags := plan.Floppies.ElementsAs(ctx, &floppies, false)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
 
 	// Crear el persistent desktop usando la API
 	desktopID, err := r.client.CreatePersistentDesktop(
@@ -156,6 +186,8 @@ func (r *vmResource) Create(ctx context.Context, req resource.CreateRequest, res
 		vcpus,
 		memory,
 		interfaces,
+		isos,
+		floppies,
 	)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -238,21 +270,22 @@ func (r *vmResource) Delete(ctx context.Context, req resource.DeleteRequest, res
 		return
 	}
 
-	// Si force_stop_on_destroy es true, detener la VM primero
+	// Si force_stop_on_destroy es true, detener la VM primero usando force stop
 	if !state.ForceStopOnDestroy.IsNull() && state.ForceStopOnDestroy.ValueBool() {
-		err := r.client.StopDesktop(state.ID.ValueString())
+		// Usar force stop directamente (como hace deployment)
+		err := r.client.ForceStopDesktop(state.ID.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddWarning(
-				"Advertencia al detener la máquina virtual",
-				fmt.Sprintf("No se pudo detener la VM (ID: %s): %s. Se procederá con la eliminación.", state.ID.ValueString(), err.Error()),
+				"Advertencia al forzar parada de la máquina virtual",
+				fmt.Sprintf("No se pudo forzar parada de la VM (ID: %s): %s. Se procederá con la eliminación.", state.ID.ValueString(), err.Error()),
 			)
 		} else {
-			// Esperar a que la VM se detenga completamente (máximo 120 segundos)
-			err = r.client.WaitForDesktopStopped(state.ID.ValueString(), 120)
+			// Esperar a que la VM se detenga completamente (máximo 10 segundos con force stop)
+			err = r.client.WaitForDesktopStopped(state.ID.ValueString(), 10)
 			if err != nil {
 				resp.Diagnostics.AddWarning(
 					"Advertencia al esperar el stop de la VM",
-					fmt.Sprintf("Timeout o error esperando a que se detenga la VM (ID: %s): %s. Se procederá con la eliminación.", state.ID.ValueString(), err.Error()),
+					fmt.Sprintf("Timeout esperando parada forzada de la VM (ID: %s): %s. Se procederá con la eliminación.", state.ID.ValueString(), err.Error()),
 				)
 			}
 		}

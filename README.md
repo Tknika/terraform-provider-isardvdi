@@ -9,7 +9,13 @@ Provider de Terraform para gestionar recursos en Isard VDI a través de su API v
 - ✅ **isard_vm** - Creación, lectura y eliminación de desktops persistentes con soporte para:
   - Hardware personalizado (vCPUs, memoria)
   - Interfaces de red personalizadas
-- ✅ **isard_deployment** - Gestión de deployments para crear múltiples desktops para usuarios/grupos
+  - Medios ISO y floppy adjuntos
+  - Parada forzada optimizada antes de destruir (force_stop_on_destroy con 10s timeout)
+- ✅ **isard_deployment** - Gestión de deployments para crear múltiples desktops para usuarios/grupos con:
+  - Hardware personalizado
+  - Medios ISO y floppy adjuntos
+  - Manejo automático de error 428 (VMs en ejecución) con retry inteligente
+- ✅ **isard_media** - Gestión de medios (ISOs y floppies) para adjuntar a VMs
 - ✅ **isard_network** - Gestión de redes virtuales de usuario
 - ✅ **isard_network_interface** - Gestión de interfaces de red del sistema (requiere admin)
 - ✅ **isard_qos_net** - Gestión de perfiles QoS de red (requiere admin)
@@ -19,6 +25,8 @@ Provider de Terraform para gestionar recursos en Isard VDI a través de su API v
 - ✅ **isard_templates** - Listado de templates disponibles con filtrado por nombre
 - ✅ **isard_network_interfaces** - Consulta de interfaces de red del sistema con filtros avanzados
 - ✅ **isard_groups** - Consulta de grupos del sistema con filtrado por nombre y categoría
+- ✅ **isard_users** - Consulta de usuarios del sistema con múltiples filtros (nombre, username, email, categoría, grupo, rol)
+- ✅ **isard_medias** - Consulta de medios disponibles con filtros avanzados (nombre, tipo, estado, categoría, grupo, usuario)
 
 ### Autenticación
 
@@ -165,6 +173,7 @@ resource "isard_vm" "vm_custom" {
 
 - [Resource: isard_vm](docs/resources/isard_vm.md) - Gestión de VMs/desktops
 - [Resource: isard_deployment](docs/resources/deployment.md) - Gestión de deployments
+- [Resource: isard_media](docs/resources/isard_media.md) - Gestión de medios (ISOs y floppies)
 - [Resource: isard_network](docs/resources/isard_network.md) - Redes virtuales de usuario
 - [Resource: isard_network_interface](docs/resources/isard_network_interface.md) - Interfaces de red del sistema
 - [Resource: isard_qos_net](docs/resources/isard_qos_net.md) - Perfiles QoS de red
@@ -172,6 +181,8 @@ resource "isard_vm" "vm_custom" {
 ### Data Sources
 
 - [Data Source: isard_templates](docs/data-sources/isard_templates.md) - Consulta de templates
+- [Data Source: isard_users](docs/data-sources/isard_users.md) - Consulta de usuarios con filtros avanzados
+- [Data Source: isard_medias](docs/data-sources/isard_medias.md) - Consulta de medios (ISOs y floppies)
 - [Data Source: isard_network_interfaces](docs/data-sources/isard_network_interfaces.md) - Consulta de interfaces
 - [Data Source: isard_groups](docs/data-sources/isard_groups.md) - Consulta de grupos
 

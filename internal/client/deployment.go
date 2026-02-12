@@ -55,6 +55,8 @@ func (c *Client) CreateDeployment(
 	guestProperties map[string]interface{},
 	image map[string]interface{},
 	userPermissions []string,
+	isos []string,
+	floppies []string,
 ) (string, error) {
 	reqURL := fmt.Sprintf("https://%s/api/v3/deployments", c.HostURL)
 
@@ -98,11 +100,26 @@ func (c *Client) CreateDeployment(
 	if disks, ok := templateHardware["disks"]; ok {
 		hardware["disks"] = disks
 	}
-	if floppies, ok := templateHardware["floppies"]; ok {
-		hardware["floppies"] = floppies
+	
+	// ISOs y Floppies: usar valores especificados o del template
+	if len(isos) > 0 {
+		isoList := make([]map[string]interface{}, len(isos))
+		for i, isoID := range isos {
+			isoList[i] = map[string]interface{}{"id": isoID}
+		}
+		hardware["isos"] = isoList
+	} else if templateISOs, ok := templateHardware["isos"]; ok {
+		hardware["isos"] = templateISOs
 	}
-	if isos, ok := templateHardware["isos"]; ok {
-		hardware["isos"] = isos
+	
+	if len(floppies) > 0 {
+		floppyList := make([]map[string]interface{}, len(floppies))
+		for i, floppyID := range floppies {
+			floppyList[i] = map[string]interface{}{"id": floppyID}
+		}
+		hardware["floppies"] = floppyList
+	} else if templateFloppies, ok := templateHardware["floppies"]; ok {
+		hardware["floppies"] = templateFloppies
 	}
 	
 	// Siempre incluir videos - requerido por la API
@@ -361,6 +378,52 @@ func (c *Client) DeleteDeployment(deploymentID string, permanent bool) error {
 		return nil
 	}
 
+	// Si es error 428 (Precondition Required), las VMs deben detenerse primero
+	if res.StatusCode == 428 {
+		// Intentar detener las VMs del deployment
+		stopErr := c.StopDeployment(deploymentID)
+		if stopErr != nil {
+			// Si falla al detener, retornar el error original
+			return fmt.Errorf("error eliminando deployment (status %d): %s (intento detener VMs falló: %v)", res.StatusCode, string(body), stopErr)
+		}
+		
+		// Esperar a que las VMs se detengan (máximo 60 segundos)
+		// Las VMs recién creadas pueden tardar más en detenerse
+		waitErr := c.WaitForDeploymentStopped(deploymentID, 60)
+		if waitErr != nil {
+			// Si timeout esperando, aún intentar eliminar una vez más
+			// Dar 10 segundos adicionales por si todavía se están deteniendo
+			time.Sleep(10 * time.Second)
+		}
+		
+		// Reintentar la eliminación
+		req2, err := http.NewRequest("DELETE", reqURL, nil)
+		if err != nil {
+			return fmt.Errorf("error creando la petición DELETE (reintento): %w", err)
+		}
+
+		req2.Header.Set("Authorization", "Bearer "+c.Token)
+		req2.Header.Set("Content-Type", "application/json")
+
+		res2, err := c.HTTPClient.Do(req2)
+		if err != nil {
+			return fmt.Errorf("error ejecutando DELETE (reintento): %w", err)
+		}
+		defer res2.Body.Close()
+
+		body2, err := io.ReadAll(res2.Body)
+		if err != nil {
+			return fmt.Errorf("error leyendo respuesta (reintento): %w", err)
+		}
+
+		// Verificar si el reintento fue exitoso
+		if res2.StatusCode == http.StatusOK || res2.StatusCode == http.StatusNoContent || res2.StatusCode == http.StatusNotFound {
+			return nil
+		}
+
+		return fmt.Errorf("error eliminando deployment (reintento, status %d): %s", res2.StatusCode, string(body2))
+	}
+
 	return fmt.Errorf("error eliminando deployment (status %d): %s", res.StatusCode, string(body))
 }
 
@@ -426,6 +489,18 @@ func (c *Client) StopDeployment(deploymentID string) error {
 
 // WaitForDeploymentStopped espera a que todas las VMs del deployment se detengan
 func (c *Client) WaitForDeploymentStopped(deploymentID string, maxWaitSeconds int) error {
+	// Verificar inmediatamente si ya está detenido (antes de esperar)
+	deploymentInfo, err := c.GetDeployment(deploymentID)
+	if err != nil {
+		return fmt.Errorf("error obteniendo información del deployment: %w", err)
+	}
+	
+	// Si todas las VMs ya están detenidas, retornar inmediatamente
+	if deploymentInfo.StartedDesktops == 0 && deploymentInfo.CreatingDesktops == 0 {
+		return nil
+	}
+	
+	// Si no están detenidas, esperar con polling
 	ticker := time.NewTicker(2 * time.Second)
 	defer ticker.Stop()
 	
