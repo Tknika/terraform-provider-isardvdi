@@ -443,6 +443,18 @@ func (c *Client) StopDeployment(deploymentID string) error {
 
 // WaitForDeploymentStopped espera a que todas las VMs del deployment se detengan
 func (c *Client) WaitForDeploymentStopped(deploymentID string, maxWaitSeconds int) error {
+	// Verificar inmediatamente si ya está detenido (antes de esperar)
+	deploymentInfo, err := c.GetDeployment(deploymentID)
+	if err != nil {
+		return fmt.Errorf("error obteniendo información del deployment: %w", err)
+	}
+	
+	// Si todas las VMs ya están detenidas, retornar inmediatamente
+	if deploymentInfo.StartedDesktops == 0 && deploymentInfo.CreatingDesktops == 0 {
+		return nil
+	}
+	
+	// Si no están detenidas, esperar con polling
 	ticker := time.NewTicker(2 * time.Second)
 	defer ticker.Stop()
 	
