@@ -378,6 +378,52 @@ func (c *Client) DeleteDeployment(deploymentID string, permanent bool) error {
 		return nil
 	}
 
+	// Si es error 428 (Precondition Required), las VMs deben detenerse primero
+	if res.StatusCode == 428 {
+		// Intentar detener las VMs del deployment
+		stopErr := c.StopDeployment(deploymentID)
+		if stopErr != nil {
+			// Si falla al detener, retornar el error original
+			return fmt.Errorf("error eliminando deployment (status %d): %s (intento detener VMs falló: %v)", res.StatusCode, string(body), stopErr)
+		}
+		
+		// Esperar a que las VMs se detengan (máximo 60 segundos)
+		// Las VMs recién creadas pueden tardar más en detenerse
+		waitErr := c.WaitForDeploymentStopped(deploymentID, 60)
+		if waitErr != nil {
+			// Si timeout esperando, aún intentar eliminar una vez más
+			// Dar 10 segundos adicionales por si todavía se están deteniendo
+			time.Sleep(10 * time.Second)
+		}
+		
+		// Reintentar la eliminación
+		req2, err := http.NewRequest("DELETE", reqURL, nil)
+		if err != nil {
+			return fmt.Errorf("error creando la petición DELETE (reintento): %w", err)
+		}
+
+		req2.Header.Set("Authorization", "Bearer "+c.Token)
+		req2.Header.Set("Content-Type", "application/json")
+
+		res2, err := c.HTTPClient.Do(req2)
+		if err != nil {
+			return fmt.Errorf("error ejecutando DELETE (reintento): %w", err)
+		}
+		defer res2.Body.Close()
+
+		body2, err := io.ReadAll(res2.Body)
+		if err != nil {
+			return fmt.Errorf("error leyendo respuesta (reintento): %w", err)
+		}
+
+		// Verificar si el reintento fue exitoso
+		if res2.StatusCode == http.StatusOK || res2.StatusCode == http.StatusNoContent || res2.StatusCode == http.StatusNotFound {
+			return nil
+		}
+
+		return fmt.Errorf("error eliminando deployment (reintento, status %d): %s", res2.StatusCode, string(body2))
+	}
+
 	return fmt.Errorf("error eliminando deployment (status %d): %s", res.StatusCode, string(body))
 }
 
