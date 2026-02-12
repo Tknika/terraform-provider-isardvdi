@@ -2,13 +2,13 @@
 
 terraform {
   required_providers {
-    isard = {
-      source = "registry.terraform.io/tknika/isard"
+    isardvdi = {
+      source = "registry.terraform.io/tknika/isardvdi"
     }
   }
 }
 
-provider "isard" {
+provider "isardvdi" {
   endpoint     = var.isard_endpoint
   auth_method  = var.isard_auth_method
   cathegory_id = var.isard_category
@@ -17,38 +17,38 @@ provider "isard" {
 }
 
 # Filtrar templates Ubuntu
-data "isard_templates" "ubuntu" {
+data "isardvdi_templates" "ubuntu" {
   name_filter = "Ubuntu"
 }
 
 # Filtrar templates Windows
-data "isard_templates" "windows" {
+data "isardvdi_templates" "windows" {
   name_filter = "Windows"
 }
 
 # Crear desktop Ubuntu
-resource "isard_vm" "ubuntu_desktop" {
-  count = length(data.isard_templates.ubuntu.templates) > 0 ? 1 : 0
+resource "isardvdi_vm" "ubuntu_desktop" {
+  count = length(data.isardvdi_templates.ubuntu.templates) > 0 ? 1 : 0
   
   name        = "desktop-ubuntu-${count.index + 1}"
   description = "Desktop Ubuntu para desarrollo"
-  template_id = data.isard_templates.ubuntu.templates[0].id
+  template_id = data.isardvdi_templates.ubuntu.templates[0].id
 }
 
 # Crear desktop Windows
-resource "isard_vm" "windows_desktop" {
-  count = length(data.isard_templates.windows.templates) > 0 ? 1 : 0
+resource "isardvdi_vm" "windows_desktop" {
+  count = length(data.isardvdi_templates.windows.templates) > 0 ? 1 : 0
   
   name        = "desktop-windows-${count.index + 1}"
   description = "Desktop Windows para testing"
-  template_id = data.isard_templates.windows.templates[0].id
+  template_id = data.isardvdi_templates.windows.templates[0].id
 }
 
 # Outputs
 output "ubuntu_templates" {
   description = "Templates Ubuntu encontrados"
   value = [
-    for t in data.isard_templates.ubuntu.templates : {
+    for t in data.isardvdi_templates.ubuntu.templates : {
       id   = t.id
       name = t.name
     }
@@ -58,7 +58,7 @@ output "ubuntu_templates" {
 output "windows_templates" {
   description = "Templates Windows encontrados"
   value = [
-    for t in data.isard_templates.windows.templates : {
+    for t in data.isardvdi_templates.windows.templates : {
       id   = t.id
       name = t.name
     }
@@ -68,7 +68,7 @@ output "windows_templates" {
 output "desktops_creados" {
   description = "IDs de los desktops creados"
   value = {
-    ubuntu  = length(isard_vm.ubuntu_desktop) > 0 ? isard_vm.ubuntu_desktop[0].id : null
-    windows = length(isard_vm.windows_desktop) > 0 ? isard_vm.windows_desktop[0].id : null
+    ubuntu  = length(isardvdi_vm.ubuntu_desktop) > 0 ? isardvdi_vm.ubuntu_desktop[0].id : null
+    windows = length(isardvdi_vm.windows_desktop) > 0 ? isardvdi_vm.windows_desktop[0].id : null
   }
 }

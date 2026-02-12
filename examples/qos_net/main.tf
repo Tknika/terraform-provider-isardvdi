@@ -1,7 +1,7 @@
 # Ejemplo de uso del recurso isard_qos_net
 
 # Crear un perfil de QoS de red
-resource "isard_qos_net" "standard" {
+resource "isardvdi_qos_net" "standard" {
   name             = "Standard Network QoS"
   description      = "Perfil estándar de QoS para red"
   average_download = 10240  # 10 MB/s en KB/s
@@ -15,9 +15,9 @@ resource "isard_qos_net" "standard" {
 # Output para ver la información del QoS
 output "qos_info" {
   value = {
-    id               = isard_qos_net.standard.id
-    name             = isard_qos_net.standard.name
-    average_download = isard_qos_net.standard.average_download
-    average_upload   = isard_qos_net.standard.average_upload
+    id               = isardvdi_qos_net.standard.id
+    name             = isardvdi_qos_net.standard.name
+    average_download = isardvdi_qos_net.standard.average_download
+    average_upload   = isardvdi_qos_net.standard.average_upload
   }
 }

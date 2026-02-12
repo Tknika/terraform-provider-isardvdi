@@ -1,4 +1,4 @@
-# isard_media Resource
+# isardvdi_media Resource
 
 Gestiona archivos multimedia (ISOs, imágenes de disco) en Isard VDI.
 
@@ -6,7 +6,7 @@ Gestiona archivos multimedia (ISOs, imágenes de disco) en Isard VDI.
 
 ```hcl
 # ISO básico
-resource "isard_media" "ubuntu_iso" {
+resource "isardvdi_media" "ubuntu_iso" {
   name        = "Ubuntu 22.04 LTS"
   url         = "https://releases.ubuntu.com/22.04/ubuntu-22.04-desktop-amd64.iso"
   kind        = "iso"
@@ -14,7 +14,7 @@ resource "isard_media" "ubuntu_iso" {
 }
 
 # Media con permisos específicos
-resource "isard_media" "restricted_iso" {
+resource "isardvdi_media" "restricted_iso" {
   name        = "Windows Server ISO"
   url         = "https://example.com/windows-server.iso"
   kind        = "iso"

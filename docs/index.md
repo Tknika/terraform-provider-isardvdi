@@ -1,19 +1,19 @@
 ---
-page_title: "Provider: Isard"
+page_title: "Provider: Isard VDI"
 description: |-
-  The Isard provider is used to interact with Isard VDI resources.
+  The Isard VDI provider is used to interact with Isard VDI resources.
 ---
 
-# Isard Provider
+# Isard VDI Provider
 
-El provider de Isard permite gestionar recursos en Isard VDI mediante Terraform.
+El provider de Isard VDI permite gestionar recursos en Isard VDI mediante Terraform.
 
 ## Configuración del Provider
 
 ### Ejemplo de Uso
 
 ```hcl
-provider "isard" {
+provider "isardvdi" {
   endpoint         = "localhost"
   auth_method      = "form"
   cathegory_id     = "default"
@@ -26,7 +26,7 @@ provider "isard" {
 ### Autenticación con Token
 
 ```hcl
-provider "isard" {
+provider "isardvdi" {
   endpoint     = "mi-servidor.isard.com"
   auth_method  = "token"
   token        = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
@@ -38,7 +38,7 @@ provider "isard" {
 ### Producción con SSL Validado
 
 ```hcl
-provider "isard" {
+provider "isardvdi" {
   endpoint         = "isard.empresa.com"
   auth_method      = "form"
   cathegory_id     = "default"
@@ -82,7 +82,7 @@ Por defecto, el provider valida los certificados SSL del servidor Isard VDI (`ss
 Para entornos de desarrollo con certificados autofirmados, puedes deshabilitar la verificación SSL:
 
 ```hcl
-provider "isard" {
+provider "isardvdi" {
   endpoint         = "localhost"
   auth_method      = "form"
   cathegory_id     = "default"
@@ -99,7 +99,7 @@ provider "isard" {
 Puedes usar variables de entorno en lugar de especificar credenciales directamente:
 
 ```hcl
-provider "isard" {
+provider "isardvdi" {
   endpoint         = var.isard_endpoint
   auth_method      = var.isard_auth_method
   username         = var.isard_username
@@ -122,17 +122,17 @@ export TF_VAR_isard_ssl_verification="false"  # Solo para desarrollo
 
 ### Recursos
 
-- [Resource: isard_vm](resources/isard_vm.md) - Gestión de desktops persistentes
-- [Resource: isard_deployment](resources/deployment.md) - Gestión de deployments
-- [Resource: isard_media](resources/isard_media.md) - Gestión de medios (ISOs y floppies)
-- [Resource: isard_network](resources/isard_network.md) - Gestión de redes virtuales de usuario
-- [Resource: isard_network_interface](resources/isard_network_interface.md) - Gestión de interfaces de red del sistema
-- [Resource: isard_qos_net](resources/isard_qos_net.md) - Gestión de perfiles QoS de red
+- [Resource: isardvdi_vm](resources/isardvdi_vm.md) - Gestión de desktops persistentes
+- [Resource: isardvdi_deployment](resources/isardvdi_deployment.md) - Gestión de deployments
+- [Resource: isardvdi_media](resources/isardvdi_media.md) - Gestión de medios (ISOs y floppies)
+- [Resource: isardvdi_network](resources/isardvdi_network.md) - Gestión de redes virtuales de usuario
+- [Resource: isardvdi_network_interface](resources/isardvdi_network_interface.md) - Gestión de interfaces de red del sistema
+- [Resource: isardvdi_qos_net](resources/isardvdi_qos_net.md) - Gestión de perfiles QoS de red
 
 ### Data Sources
 
-- [Data Source: isard_templates](data-sources/isard_templates.md) - Consulta de templates disponibles
-- [Data Source: isard_users](data-sources/isard_users.md) - Consulta de usuarios del sistema
-- [Data Source: isard_medias](data-sources/isard_medias.md) - Consulta de medios (ISOs y floppies)
-- [Data Source: isard_network_interfaces](data-sources/isard_network_interfaces.md) - Consulta de interfaces de red del sistema
-- [Data Source: isard_groups](data-sources/isard_groups.md) - Consulta de grupos del sistema
+- [Data Source: isardvdi_templates](data-sources/isardvdi_templates.md) - Consulta de templates disponibles
+- [Data Source: isardvdi_users](data-sources/isardvdi_users.md) - Consulta de usuarios del sistema
+- [Data Source: isardvdi_medias](data-sources/isardvdi_medias.md) - Consulta de medios (ISOs y floppies)
+- [Data Source: isardvdi_network_interfaces](data-sources/isardvdi_network_interfaces.md) - Consulta de interfaces de red del sistema
+- [Data Source: isardvdi_groups](data-sources/isardvdi_groups.md) - Consulta de grupos del sistema

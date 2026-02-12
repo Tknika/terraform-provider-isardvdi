@@ -1,12 +1,12 @@
 terraform {
   required_providers {
-    isard = {
-      source = "tknika/isard"
+    isardvdi = {
+      source = "tknika/isardvdi"
     }
   }
 }
 
-provider "isard" {
+provider "isardvdi" {
   endpoint    = "isard.example.com"
   auth_method = "token"
   token       = var.isard_token
@@ -25,7 +25,7 @@ variable "template_id" {
 }
 
 # Ejemplo 1: Deployment básico para un grupo
-resource "isard_deployment" "group_deployment" {
+resource "isardvdi_deployment" "group_deployment" {
   name         = "Deployment Equipo DevOps"
   description  = "Desktops para el equipo de DevOps"
   template_id  = var.template_id
@@ -38,7 +38,7 @@ resource "isard_deployment" "group_deployment" {
 }
 
 # Ejemplo 2: Deployment con hardware personalizado
-resource "isard_deployment" "performance_deployment" {
+resource "isardvdi_deployment" "performance_deployment" {
   name         = "Deployment Alto Rendimiento"
   description  = "Deployment con recursos mejorados para tareas intensivas"
   template_id  = var.template_id
@@ -54,7 +54,7 @@ resource "isard_deployment" "performance_deployment" {
 }
 
 # Ejemplo 3: Deployment para usuarios específicos
-resource "isard_deployment" "user_deployment" {
+resource "isardvdi_deployment" "user_deployment" {
   name         = "Deployment Usuarios VIP"
   description  = "Desktops para usuarios específicos"
   template_id  = var.template_id
@@ -76,7 +76,7 @@ resource "isard_deployment" "user_deployment" {
 }
 
 # Ejemplo 4: Deployment para una categoría completa
-resource "isard_deployment" "category_deployment" {
+resource "isardvdi_deployment" "category_deployment" {
   name         = "Deployment Estudiantes"
   description  = "Desktops para todos los estudiantes de la institución"
   template_id  = var.template_id
@@ -89,7 +89,7 @@ resource "isard_deployment" "category_deployment" {
 }
 
 # Ejemplo 5: Deployment con configuración de red personalizada
-resource "isard_deployment" "network_deployment" {
+resource "isardvdi_deployment" "network_deployment" {
   name         = "Deployment Red Avanzada"
   description  = "Deployment con interfaces de red personalizadas"
   template_id  = var.template_id
@@ -109,7 +109,7 @@ resource "isard_deployment" "network_deployment" {
 }
 
 # Ejemplo 6: Deployment para múltiples grupos
-resource "isard_deployment" "multi_group_deployment" {
+resource "isardvdi_deployment" "multi_group_deployment" {
   name         = "Deployment Multi-Grupo"
   description  = "Deployment compartido entre varios grupos"
   template_id  = var.template_id
@@ -126,7 +126,7 @@ resource "isard_deployment" "multi_group_deployment" {
 }
 
 # Ejemplo 7: Deployment con viewers personalizados (solo web)
-resource "isard_deployment" "web_viewers_deployment" {
+resource "isardvdi_deployment" "web_viewers_deployment" {
   name         = "Deployment Acceso Web"
   description  = "Deployment con solo viewers basados en navegador"
   template_id  = var.template_id
@@ -142,7 +142,7 @@ resource "isard_deployment" "web_viewers_deployment" {
 }
 
 # Ejemplo 8: Deployment con SPICE para máximo rendimiento
-resource "isard_deployment" "spice_deployment" {
+resource "isardvdi_deployment" "spice_deployment" {
   name         = "Deployment SPICE"
   description  = "Deployment optimizado para alto rendimiento con SPICE"
   template_id  = var.template_id
@@ -161,7 +161,7 @@ resource "isard_deployment" "spice_deployment" {
 }
 
 # Ejemplo 9: Deployment con todos los viewers disponibles
-resource "isard_deployment" "full_access_deployment" {
+resource "isardvdi_deployment" "full_access_deployment" {
   name         = "Deployment Acceso Completo"
   description  = "Deployment con todos los métodos de acceso disponibles"
   template_id  = var.template_id
@@ -185,30 +185,30 @@ resource "isard_deployment" "full_access_deployment" {
 # Outputs para mostrar información de los deployments creados
 output "group_deployment_id" {
   description = "ID del deployment del grupo DevOps"
-  value       = isard_deployment.group_deployment.id
+  value       = isardvdi_deployment.group_deployment.id
 }
 
 output "performance_deployment_id" {
   description = "ID del deployment de alto rendimiento"
-  value       = isard_deployment.performance_deployment.id
+  value       = isardvdi_deployment.performance_deployment.id
 }
 
 output "user_deployment_id" {
   description = "ID del deployment de usuarios VIP"
-  value       = isard_deployment.user_deployment.id
+  value       = isardvdi_deployment.user_deployment.id
 }
 
 output "category_deployment_id" {
   description = "ID del deployment de estudiantes"
-  value       = isard_deployment.category_deployment.id
+  value       = isardvdi_deployment.category_deployment.id
 }
 
 output "web_viewers_deployment_id" {
   description = "ID del deployment con viewers web"
-  value       = isard_deployment.web_viewers_deployment.id
+  value       = isardvdi_deployment.web_viewers_deployment.id
 }
 
 output "spice_deployment_id" {
   description = "ID del deployment con SPICE"
-  value       = isard_deployment.spice_deployment.id
+  value       = isardvdi_deployment.spice_deployment.id
 }

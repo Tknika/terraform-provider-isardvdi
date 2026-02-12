@@ -1,12 +1,12 @@
 terraform {
   required_providers {
-    isard = {
+    isardvdi = {
       source = "terraform.local/local/isard"
     }
   }
 }
 
-provider "isard" {
+provider "isardvdi" {
   host     = "https://localhost"
   username = "admin"
   password = "IsardVDI"
@@ -14,7 +14,7 @@ provider "isard" {
 }
 
 # Ejemplo 1: Deployment con ISO específico
-resource "isard_deployment" "training_with_tools" {
+resource "isardvdi_deployment" "training_with_tools" {
   name         = "Training Environment"
   description  = "Entorno de formación con herramientas"
   template_id  = "template-id"
@@ -33,7 +33,7 @@ resource "isard_deployment" "training_with_tools" {
 }
 
 # Ejemplo 2: Deployment con múltiples ISOs
-resource "isard_deployment" "lab_deployment" {
+resource "isardvdi_deployment" "lab_deployment" {
   name         = "Lab Deployment"
   description  = "Deployment de laboratorio con múltiples ISOs"
   template_id  = "template-id"
@@ -57,19 +57,19 @@ resource "isard_deployment" "lab_deployment" {
 }
 
 # Ejemplo 3: Deployment usando data source
-data "isard_medias" "installation_media" {
+data "isardvdi_medias" "installation_media" {
   name_filter = "Windows Server"
   kind        = "iso"
   status      = "Downloaded"
 }
 
-data "isard_medias" "virtio_drivers" {
+data "isardvdi_medias" "virtio_drivers" {
   name_filter = "VirtIO"
   kind        = "iso"
   status      = "Downloaded"
 }
 
-resource "isard_deployment" "windows_deployment" {
+resource "isardvdi_deployment" "windows_deployment" {
   name         = "Windows Server Deployment"
   description  = "Deployment de Windows Server con drivers"
   template_id  = "windows-template-id"
@@ -81,8 +81,8 @@ resource "isard_deployment" "windows_deployment" {
   
   # Combinar múltiples data sources
   isos = concat(
-    length(data.isard_medias.installation_media.medias) > 0 ? [data.isard_medias.installation_media.medias[0].id] : [],
-    length(data.isard_medias.virtio_drivers.medias) > 0 ? [data.isard_medias.virtio_drivers.medias[0].id] : []
+    length(data.isardvdi_medias.installation_media.medias) > 0 ? [data.isardvdi_medias.installation_media.medias[0].id] : [],
+    length(data.isardvdi_medias.virtio_drivers.medias) > 0 ? [data.isardvdi_medias.virtio_drivers.medias[0].id] : []
   )
   
   allowed {
@@ -91,14 +91,14 @@ resource "isard_deployment" "windows_deployment" {
 }
 
 # Ejemplo 4: Deployment condicional basado en disponibilidad de media
-data "isard_medias" "required_iso" {
+data "isardvdi_medias" "required_iso" {
   name_filter = "Required Software"
   kind        = "iso"
   status      = "Downloaded"
 }
 
-resource "isard_deployment" "conditional_deployment" {
-  count = length(data.isard_medias.required_iso.medias) > 0 ? 1 : 0
+resource "isardvdi_deployment" "conditional_deployment" {
+  count = length(data.isardvdi_medias.required_iso.medias) > 0 ? 1 : 0
   
   name         = "Conditional Deployment"
   description  = "Solo se crea si el ISO requerido está disponible"
@@ -109,7 +109,7 @@ resource "isard_deployment" "conditional_deployment" {
   vcpus  = 2
   memory = 4
   
-  isos = [data.isard_medias.required_iso.medias[0].id]
+  isos = [data.isardvdi_medias.required_iso.medias[0].id]
   
   allowed {
     roles = ["user"]
@@ -118,17 +118,17 @@ resource "isard_deployment" "conditional_deployment" {
 
 # Outputs
 output "training_deployment_id" {
-  value = isard_deployment.training_with_tools.id
+  value = isardvdi_deployment.training_with_tools.id
 }
 
 output "windows_deployment_info" {
   value = {
-    id              = isard_deployment.windows_deployment.id
-    name            = isard_deployment.windows_deployment.name
-    isos_attached   = length(isard_deployment.windows_deployment.isos)
+    id              = isardvdi_deployment.windows_deployment.id
+    name            = isardvdi_deployment.windows_deployment.name
+    isos_attached   = length(isardvdi_deployment.windows_deployment.isos)
   }
 }
 
 output "conditional_created" {
-  value = length(isard_deployment.conditional_deployment) > 0 ? "Yes" : "No - Required ISO not available"
+  value = length(isardvdi_deployment.conditional_deployment) > 0 ? "Yes" : "No - Required ISO not available"
 }

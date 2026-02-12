@@ -1,4 +1,4 @@
-# isard_medias Data Source
+# isardvdi_medias Data Source
 
 Obtiene información sobre los medios (ISOs, imágenes de disco) disponibles en Isard VDI.
 
@@ -6,38 +6,38 @@ Obtiene información sobre los medios (ISOs, imágenes de disco) disponibles en 
 
 ```hcl
 # Obtener todos los medios
-data "isard_medias" "all" {}
+data "isardvdi_medias" "all" {}
 
 # Buscar medios por nombre
-data "isard_medias" "ubuntu" {
+data "isardvdi_medias" "ubuntu" {
   name_filter = "Ubuntu"
 }
 
 # Filtrar por tipo de medio
-data "isard_medias" "isos" {
+data "isardvdi_medias" "isos" {
   kind = "iso"
 }
 
 # Filtrar por estado
-data "isard_medias" "downloaded" {
+data "isardvdi_medias" "downloaded" {
   status = "Downloaded"
 }
 
 # Filtrar por categoría y grupo
-data "isard_medias" "category_medias" {
+data "isardvdi_medias" "category_medias" {
   category_id = "default"
   group_id    = "584a8dcb-abb0-446d-ba7c-d05fdb57f051"
 }
 
 # Filtrar por tipo y nombre
-data "isard_medias" "ubuntu_isos" {
+data "isardvdi_medias" "ubuntu_isos" {
   name_filter = "ubuntu"
   kind        = "iso"
   status      = "Downloaded"
 }
 
 # Obtener medios de un usuario específico
-data "isard_medias" "user_medias" {
+data "isardvdi_medias" "user_medias" {
   user_id = "local-default-admin-admin"
 }
 ```
@@ -76,7 +76,7 @@ Todos los argumentos son opcionales y actúan como filtros:
 ## Uso con Outputs
 
 ```hcl
-data "isard_medias" "ubuntu" {
+data "isardvdi_medias" "ubuntu" {
   name_filter = "Ubuntu"
   kind        = "iso"
 }
@@ -104,13 +104,13 @@ Puedes usar el data source para referenciar medios existentes:
 
 ```hcl
 # Buscar un ISO específico
-data "isard_medias" "virtio_drivers" {
+data "isardvdi_medias" "virtio_drivers" {
   name_filter = "VirtIO"
   kind        = "iso"
 }
 
 # Usar el ID en otro recurso (cuando se soporte adjuntar medios a VMs)
-resource "isard_vm" "windows_vm" {
+resource "isardvdi_vm" "windows_vm" {
   name        = "Windows VM"
   template_id = "template-id"
   # En futuras versiones: media_ids = [data.isard_medias.virtio_drivers.medias[0].id]
@@ -123,7 +123,7 @@ Los filtros son acumulativos (AND lógico):
 
 ```hcl
 # Solo medios que cumplan TODAS las condiciones
-data "isard_medias" "filtered" {
+data "isardvdi_medias" "filtered" {
   name_filter = "Ubuntu"      # Y nombre contiene "Ubuntu"
   kind        = "iso"         # Y tipo es ISO
   status      = "Downloaded"  # Y está completamente descargado

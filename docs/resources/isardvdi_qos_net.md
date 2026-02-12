@@ -1,11 +1,11 @@
 ---
-page_title: "isard_qos_net Resource - terraform-provider-isard"
+page_title: "isardvdi_qos_net Resource - terraform-provider-isardvdi"
 subcategory: ""
 description: |-
   Manages QoS network configuration in Isard VDI.
 ---
 
-# Resource: isard_qos_net
+# Resource: isardvdi_qos_net
 
 Gestiona un perfil de Quality of Service (QoS) para redes en Isard VDI. **Requiere privilegios de administrador.**
 
@@ -14,7 +14,7 @@ Gestiona un perfil de Quality of Service (QoS) para redes en Isard VDI. **Requie
 ### Ejemplo Básico
 
 ```hcl
-resource "isard_qos_net" "standard" {
+resource "isardvdi_qos_net" "standard" {
   id          = "standard-qos"
   name        = "QoS Estándar"
   description = "Perfil QoS estándar para redes"
@@ -24,7 +24,7 @@ resource "isard_qos_net" "standard" {
 ### Con Límites de Ancho de Banda
 
 ```hcl
-resource "isard_qos_net" "limited" {
+resource "isardvdi_qos_net" "limited" {
   id               = "limited-bandwidth"
   name             = "Ancho de Banda Limitado"
   description      = "Limita el tráfico de red a 100Mbps"
@@ -40,7 +40,7 @@ resource "isard_qos_net" "limited" {
 ### Perfil Alta Performance
 
 ```hcl
-resource "isard_qos_net" "high_performance" {
+resource "isardvdi_qos_net" "high_performance" {
   id               = "high-perf"
   name             = "Alta Performance"
   description      = "Sin límites para aplicaciones críticas"
@@ -53,7 +53,7 @@ resource "isard_qos_net" "high_performance" {
 
 ```hcl
 # Crear perfil QoS
-resource "isard_qos_net" "dev_team" {
+resource "isardvdi_qos_net" "dev_team" {
   id          = "dev-team-qos"
   name        = "QoS Equipo Dev"
   description = "200 Mbps para equipo de desarrollo"
@@ -62,7 +62,7 @@ resource "isard_qos_net" "dev_team" {
 }
 
 # Usar en una red
-resource "isard_network" "dev_network" {
+resource "isardvdi_network" "dev_network" {
   name        = "Red Desarrollo"
   description = "Red con QoS controlado"
   qos_id      = isard_qos_net.dev_team.id
@@ -182,7 +182,7 @@ Cuántos bytes pueden enviarse en una ráfaga antes de aplicar el límite promed
 
 ```hcl
 # Perfil para desarrollo (100 Mbps)
-resource "isard_qos_net" "dev" {
+resource "isardvdi_qos_net" "dev" {
   id               = "qos-dev"
   name             = "Desarrollo"
   description      = "100 Mbps para desarrollo"
@@ -195,7 +195,7 @@ resource "isard_qos_net" "dev" {
 }
 
 # Perfil para producción (1 Gbps)
-resource "isard_qos_net" "prod" {
+resource "isardvdi_qos_net" "prod" {
   id               = "qos-prod"
   name             = "Producción"
   description      = "1 Gbps para producción"
@@ -204,13 +204,13 @@ resource "isard_qos_net" "prod" {
 }
 
 # Red con QoS de desarrollo
-resource "isard_network" "dev_net" {
+resource "isardvdi_network" "dev_net" {
   name   = "Red Desarrollo"
   qos_id = isard_qos_net.dev.id
 }
 
 # Interfaz con QoS de producción
-resource "isard_network_interface" "prod_bridge" {
+resource "isardvdi_network_interface" "prod_bridge" {
   id     = "prod-bridge"
   name   = "Bridge Producción"
   net    = "br-prod"

@@ -1,6 +1,6 @@
-# Ejemplo de Data Source isard_medias
+# Ejemplo de Data Source isardvdi_medias
 
-Este ejemplo demuestra cómo usar el data source `isard_medias` para consultar y filtrar medios (ISOs, imágenes de disco) en Isard VDI.
+Este ejemplo demuestra cómo usar el data source `isardvdi_medias` para consultar y filtrar medios (ISOs, imágenes de disco) en Isard VDI.
 
 ## ¿Qué es un Medio en Isard VDI?
 
@@ -13,13 +13,13 @@ Los medios son archivos que se pueden adjuntar a máquinas virtuales:
 
 ### 1. Todos los Medios
 ```hcl
-data "isard_medias" "all" {}
+data "isardvdi_medias" "all" {}
 ```
 Obtiene todos los medios accesibles por el usuario.
 
 ### 2. Filtrar por Nombre
 ```hcl
-data "isard_medias" "ubuntu" {
+data "isardvdi_medias" "ubuntu" {
   name_filter = "Ubuntu"  # Coincidencia parcial, insensible a mayúsculas
 }
 ```
@@ -27,7 +27,7 @@ Encuentra todos los medios cuyo nombre contiene "Ubuntu".
 
 ### 3. Filtrar por Tipo
 ```hcl
-data "isard_medias" "isos" {
+data "isardvdi_medias" "isos" {
   kind = "iso"  # Valores: iso, disk, floppy
 }
 ```
@@ -35,7 +35,7 @@ Obtiene solo medios de tipo ISO.
 
 ### 4. Filtrar por Estado
 ```hcl
-data "isard_medias" "ready" {
+data "isardvdi_medias" "ready" {
   status = "Downloaded"  # Solo medios completamente descargados
 }
 ```
@@ -47,7 +47,7 @@ Estados comunes:
 
 ### 5. Filtros Combinados
 ```hcl
-data "isard_medias" "ubuntu_ready" {
+data "isardvdi_medias" "ubuntu_ready" {
   name_filter = "ubuntu"
   kind        = "iso"
   status      = "Downloaded"
@@ -57,14 +57,14 @@ Solo ISOs de Ubuntu que estén completamente descargados.
 
 ### 6. Filtrar por Propietario
 ```hcl
-data "isard_medias" "my_medias" {
+data "isardvdi_medias" "my_medias" {
   user_id = "user-id-here"
 }
 ```
 
 ### 7. Filtrar por Categoría/Grupo
 ```hcl
-data "isard_medias" "category_medias" {
+data "isardvdi_medias" "category_medias" {
   category_id = "default"
   group_id    = "group-id-here"
 }
@@ -75,7 +75,7 @@ data "isard_medias" "category_medias" {
 ### Obtener IDs
 ```hcl
 output "media_ids" {
-  value = data.isard_medias.ubuntu.medias[*].id
+  value = data.isardvdi_medias.ubuntu.medias[*].id
 }
 ```
 
@@ -83,7 +83,7 @@ output "media_ids" {
 ```hcl
 output "media_map" {
   value = {
-    for media in data.isard_medias.all.medias :
+    for media in data.isardvdi_medias.all.medias :
     media.name => media.id
   }
 }
@@ -93,7 +93,7 @@ output "media_map" {
 ```hcl
 output "large_isos" {
   value = [
-    for media in data.isard_medias.all.medias :
+    for media in data.isardvdi_medias.all.medias :
     media.name
     if media.kind == "iso" && media.status == "Downloaded"
   ]
@@ -103,7 +103,7 @@ output "large_isos" {
 ### Acceso Condicional
 ```hcl
 locals {
-  ubuntu_iso = length(data.isard_medias.ubuntu.medias) > 0 ? data.isard_medias.ubuntu.medias[0] : null
+  ubuntu_iso = length(data.isardvdi_medias.ubuntu.medias) > 0 ? data.isardvdi_medias.ubuntu.medias[0] : null
 }
 
 output "ubuntu_iso_info" {
@@ -121,7 +121,7 @@ output "ubuntu_iso_info" {
 Antes de crear VMs, verifica que los ISOs necesarios estén disponibles:
 
 ```hcl
-data "isard_medias" "required_iso" {
+data "isardvdi_medias" "required_iso" {
   name_filter = "Ubuntu 22.04"
   status      = "Downloaded"
 }
@@ -129,7 +129,7 @@ data "isard_medias" "required_iso" {
 # Usar en un check
 check "iso_available" {
   assert {
-    condition     = length(data.isard_medias.required_iso.medias) > 0
+    condition     = length(data.isardvdi_medias.required_iso.medias) > 0
     error_message = "Ubuntu 22.04 ISO no está disponible"
   }
 }
@@ -141,7 +141,7 @@ Lista todos los medios y su estado:
 ```hcl
 output "media_inventory" {
   value = {
-    for media in data.isard_medias.all.medias :
+    for media in data.isardvdi_medias.all.medias :
     media.name => {
       type     = media.kind
       status   = media.status
@@ -156,7 +156,7 @@ output "media_inventory" {
 ```hcl
 output "downloads_in_progress" {
   value = [
-    for media in data.isard_medias.all.medias :
+    for media in data.isardvdi_medias.all.medias :
     {
       name   = media.name
       status = media.status
@@ -169,12 +169,12 @@ output "downloads_in_progress" {
 ### 4. Buscar por Múltiples Criterios
 ```hcl
 # Combinando con data source de usuarios
-data "isard_users" "admin_user" {
+data "isardvdi_users" "admin_user" {
   role = "admin"
 }
 
-data "isard_medias" "admin_medias" {
-  user_id = data.isard_users.admin_user.users[0].id
+data "isardvdi_medias" "admin_medias" {
+  user_id = data.isardvdi_users.admin_user.users[0].id
   status  = "Downloaded"
 }
 ```
@@ -225,13 +225,13 @@ Aunque actualmente no se puede adjuntar medios directamente a VMs en este provid
 En futuras versiones, podrías usar los IDs así:
 
 ```hcl
-data "isard_medias" "drivers" {
+data "isardvdi_medias" "drivers" {
   name_filter = "VirtIO Drivers"
 }
 
-resource "isard_vm" "windows" {
+resource "isardvdi_vm" "windows" {
   # ... other config ...
   # Hipotético en futuras versiones:
-  # cdrom_media_id = data.isard_medias.drivers.medias[0].id
+  # cdrom_media_id = data.isardvdi_medias.drivers.medias[0].id
 }
 ```

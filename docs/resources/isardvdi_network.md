@@ -1,11 +1,11 @@
 ---
-page_title: "isard_network Resource - terraform-provider-isard"
+page_title: "isardvdi_network Resource - terraform-provider-isardvdi"
 subcategory: ""
 description: |-
   Manages a network in Isard VDI.
 ---
 
-# Resource: isard_network
+# Resource: isardvdi_network
 
 Gestiona una red virtual de usuario en Isard VDI.
 
@@ -14,7 +14,7 @@ Gestiona una red virtual de usuario en Isard VDI.
 ### Ejemplo Básico
 
 ```hcl
-resource "isard_network" "mi_red" {
+resource "isardvdi_network" "mi_red" {
   name        = "Red de Desarrollo"
   description = "Red virtual para equipo de desarrollo"
 }
@@ -23,7 +23,7 @@ resource "isard_network" "mi_red" {
 ### Con Configuración Completa
 
 ```hcl
-resource "isard_network" "red_produccion" {
+resource "isardvdi_network" "red_produccion" {
   name        = "Red Producción"
   description = "Red virtual para entorno de producción"
   model       = "virtio"
@@ -34,7 +34,7 @@ resource "isard_network" "red_produccion" {
 ### Múltiples Redes
 
 ```hcl
-resource "isard_network" "redes_equipo" {
+resource "isardvdi_network" "redes_equipo" {
   count = 3
   
   name        = "Red Equipo ${count.index + 1}"
@@ -110,7 +110,7 @@ Al eliminar una red:
 
 ```hcl
 # Crear una red
-resource "isard_network" "mi_red" {
+resource "isardvdi_network" "mi_red" {
   name        = "Red Desarrollo"
   description = "Red para VMs de desarrollo"
 }

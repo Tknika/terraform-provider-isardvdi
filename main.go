@@ -6,7 +6,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
-	"github.com/tknika/terraform-provider-isard/internal/provider"
+	"github.com/tknika/terraform-provider-isardvdi/internal/provider"
 )
 
 // Run the docs generation tool, check its repository for more information on how it works and how docs
@@ -32,7 +32,7 @@ func main() {
 	opts := providerserver.ServeOpts{
 		// TODO: Update this string with the published name of your provider.
 		// Also update the createNewProvider function in internal/provider/provider.go.
-		Address: "registry.terraform.io/tknika/isard",
+		Address: "registry.terraform.io/tknika/isardvdi",
 		Debug:   debug,
 	}
 

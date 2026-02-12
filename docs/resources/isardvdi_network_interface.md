@@ -1,11 +1,11 @@
 ---
-page_title: "isard_network_interface Resource - terraform-provider-isard"
+page_title: "isardvdi_network_interface Resource - terraform-provider-isardvdi"
 subcategory: ""
 description: |-
   Manages a network interface in Isard VDI.
 ---
 
-# Resource: isard_network_interface
+# Resource: isardvdi_network_interface
 
 Gestiona una interfaz de red a nivel de sistema en Isard VDI. **Requiere privilegios de administrador.**
 
@@ -14,7 +14,7 @@ Gestiona una interfaz de red a nivel de sistema en Isard VDI. **Requiere privile
 ### Ejemplo Básico
 
 ```hcl
-resource "isard_network_interface" "bridge_dev" {
+resource "isardvdi_network_interface" "bridge_dev" {
   id          = "bridge-desarrollo"
   name        = "Bridge Desarrollo"
   description = "Interfaz bridge para desarrollo"
@@ -29,7 +29,7 @@ resource "isard_network_interface" "bridge_dev" {
 ### Interfaz OVS con VLAN
 
 ```hcl
-resource "isard_network_interface" "ovs_vlan100" {
+resource "isardvdi_network_interface" "ovs_vlan100" {
   id          = "ovs-vlan-100"
   name        = "OVS VLAN 100"
   description = "Interfaz OVS con VLAN 100"
@@ -44,7 +44,7 @@ resource "isard_network_interface" "ovs_vlan100" {
 ### Interfaz de Red Personal
 
 ```hcl
-resource "isard_network_interface" "personal_range" {
+resource "isardvdi_network_interface" "personal_range" {
   id          = "personal-dev-team"
   name        = "Red Personal Equipo Dev"
   description = "Rango VLAN personal para equipo"
@@ -59,7 +59,7 @@ resource "isard_network_interface" "personal_range" {
 ### Interfaz Visible para Todos
 
 ```hcl
-resource "isard_network_interface" "public_bridge" {
+resource "isardvdi_network_interface" "public_bridge" {
   id          = "bridge-public"
   name        = "Bridge Público"
   description = "Interfaz visible para todos los usuarios"
@@ -82,7 +82,7 @@ resource "isard_network_interface" "public_bridge" {
 ### Interfaz con Permisos Específicos
 
 ```hcl
-resource "isard_network_interface" "restricted_bridge" {
+resource "isardvdi_network_interface" "restricted_bridge" {
   id          = "bridge-restricted"
   name        = "Bridge Restringido"
   description = "Solo para roles admin y manager"
@@ -104,7 +104,7 @@ resource "isard_network_interface" "restricted_bridge" {
 ### Interfaz para Categoría Específica
 
 ```hcl
-resource "isard_network_interface" "category_bridge" {
+resource "isardvdi_network_interface" "category_bridge" {
   id          = "bridge-marketing"
   name        = "Bridge Marketing"
   description = "Solo para la categoría marketing"
@@ -126,7 +126,7 @@ resource "isard_network_interface" "category_bridge" {
 
 ```hcl
 # Crear la interfaz
-resource "isard_network_interface" "custom_bridge" {
+resource "isardvdi_network_interface" "custom_bridge" {
   id          = "custom-bridge-1"
   name        = "Custom Bridge 1"
   description = "Bridge personalizado"
@@ -138,7 +138,7 @@ resource "isard_network_interface" "custom_bridge" {
 }
 
 # Usar en una VM
-resource "isard_vm" "con_interfaz" {
+resource "isardvdi_vm" "con_interfaz" {
   name        = "vm-con-interfaz-custom"
   description = "VM con interfaz personalizada"
   template_id = data.isard_templates.ubuntu.templates[0].id
@@ -312,7 +312,7 @@ Asigna rangos de VLANs para uso personal de usuarios/grupos.
 Use el data source `isard_network_interfaces` para buscar interfaces existentes:
 
 ```hcl
-data "isard_network_interfaces" "bridges" {
+data "isardvdi_network_interfaces" "bridges" {
   filter = {
     kind = "bridge"
   }

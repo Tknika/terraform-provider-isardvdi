@@ -1,11 +1,11 @@
 ---
-page_title: "isard_templates Data Source - terraform-provider-isard"
+page_title: "isardvdi_templates Data Source - terraform-provider-isardvdi"
 subcategory: ""
 description: |-
   Retrieve templates from Isard VDI.
 ---
 
-# Data Source: isard_templates
+# Data Source: isardvdi_templates
 
 Obtiene la lista de templates disponibles para el usuario autenticado en Isard VDI.
 
@@ -14,7 +14,7 @@ Obtiene la lista de templates disponibles para el usuario autenticado en Isard V
 ### Obtener Todos los Templates
 
 ```hcl
-data "isard_templates" "todos" {}
+data "isardvdi_templates" "todos" {}
 
 output "lista_completa" {
   value = data.isard_templates.todos.templates
@@ -24,7 +24,7 @@ output "lista_completa" {
 ### Filtrar Templates por Nombre
 
 ```hcl
-data "isard_templates" "ubuntu" {
+data "isardvdi_templates" "ubuntu" {
   name_filter = "Ubuntu"
 }
 
@@ -36,11 +36,11 @@ output "templates_ubuntu" {
 ### Usar con Resource
 
 ```hcl
-data "isard_templates" "ubuntu" {
+data "isardvdi_templates" "ubuntu" {
   name_filter = "Ubuntu Desktop"
 }
 
-resource "isard_vm" "mi_desktop" {
+resource "isardvdi_vm" "mi_desktop" {
   name        = "desktop-desde-datasource"
   description = "Usa el primer template Ubuntu encontrado"
   template_id = data.isard_templates.ubuntu.templates[0].id
@@ -51,15 +51,15 @@ resource "isard_vm" "mi_desktop" {
 
 ```hcl
 # Estos tres ejemplos devolverán los mismos resultados
-data "isard_templates" "ubuntu1" {
+data "isardvdi_templates" "ubuntu1" {
   name_filter = "ubuntu"
 }
 
-data "isard_templates" "ubuntu2" {
+data "isardvdi_templates" "ubuntu2" {
   name_filter = "Ubuntu"
 }
 
-data "isard_templates" "ubuntu3" {
+data "isardvdi_templates" "ubuntu3" {
   name_filter = "UBUNTU"
 }
 ```
@@ -67,7 +67,7 @@ data "isard_templates" "ubuntu3" {
 ### Verificar que Exista al Menos un Template
 
 ```hcl
-data "isard_templates" "windows" {
+data "isardvdi_templates" "windows" {
   name_filter = "Windows"
 }
 
@@ -77,7 +77,7 @@ locals {
   template_id    = local.template_count > 0 ? data.isard_templates.windows.templates[0].id : null
 }
 
-resource "isard_vm" "windows_desktop" {
+resource "isardvdi_vm" "windows_desktop" {
   count = local.template_count > 0 ? 1 : 0
   
   name        = "desktop-windows"
@@ -128,22 +128,22 @@ Si tienes estos templates:
 
 ```hcl
 # Devuelve: Ubuntu Desktop 22.04, Ubuntu Server 20.04
-data "isard_templates" "ubuntu" {
+data "isardvdi_templates" "ubuntu" {
   name_filter = "Ubuntu"
 }
 
 # Devuelve: Ubuntu Desktop 22.04
-data "isard_templates" "desktop" {
+data "isardvdi_templates" "desktop" {
   name_filter = "Desktop"
 }
 
 # Devuelve: Ubuntu Desktop 22.04, Ubuntu Server 20.04, Debian Server
-data "isard_templates" "servers" {
+data "isardvdi_templates" "servers" {
   name_filter = "server"
 }
 
 # Devuelve: todos los templates
-data "isard_templates" "todos" {}
+data "isardvdi_templates" "todos" {}
 ```
 
 ## Ejemplos Adicionales
@@ -151,7 +151,7 @@ data "isard_templates" "todos" {}
 ### Seleccionar Template Específico
 
 ```hcl
-data "isard_templates" "ubuntu" {
+data "isardvdi_templates" "ubuntu" {
   name_filter = "Ubuntu"
 }
 
@@ -163,7 +163,7 @@ locals {
   ][0]
 }
 
-resource "isard_vm" "mi_vm" {
+resource "isardvdi_vm" "mi_vm" {
   name        = "mi-desktop-ubuntu-22"
   template_id = local.ubuntu_22_template.id
 }
@@ -172,7 +172,7 @@ resource "isard_vm" "mi_vm" {
 ### Listar Información de Templates
 
 ```hcl
-data "isard_templates" "todos" {}
+data "isardvdi_templates" "todos" {}
 
 output "templates_info" {
   value = {
@@ -191,11 +191,11 @@ output "templates_info" {
 ### Crear Desktops para Cada Template
 
 ```hcl
-data "isard_templates" "desarrollo" {
+data "isardvdi_templates" "desarrollo" {
   name_filter = "Dev"
 }
 
-resource "isard_vm" "dev_desktops" {
+resource "isardvdi_vm" "dev_desktops" {
   for_each = { 
     for idx, tmpl in data.isard_templates.desarrollo.templates : 
     idx => tmpl 
@@ -210,7 +210,7 @@ resource "isard_vm" "dev_desktops" {
 ### Validación de Templates
 
 ```hcl
-data "isard_templates" "ubuntu" {
+data "isardvdi_templates" "ubuntu" {
   name_filter = "Ubuntu"
 }
 

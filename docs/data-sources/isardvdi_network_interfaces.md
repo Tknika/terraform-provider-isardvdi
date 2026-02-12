@@ -1,11 +1,11 @@
 ---
-page_title: "isard_network_interfaces Data Source - terraform-provider-isard"
+page_title: "isardvdi_network_interfaces Data Source - terraform-provider-isardvdi"
 subcategory: ""
 description: |-
   Retrieve network interfaces from Isard VDI.
 ---
 
-# Data Source: isard_network_interfaces
+# Data Source: isardvdi_network_interfaces
 
 Obtiene la lista de interfaces de red del sistema disponibles en Isard VDI. **Requiere privilegios de administrador.**
 
@@ -14,7 +14,7 @@ Obtiene la lista de interfaces de red del sistema disponibles en Isard VDI. **Re
 ### Obtener Todas las Interfaces
 
 ```hcl
-data "isard_network_interfaces" "all" {}
+data "isardvdi_network_interfaces" "all" {}
 
 output "todas_las_interfaces" {
   value = data.isard_network_interfaces.all.interfaces
@@ -24,7 +24,7 @@ output "todas_las_interfaces" {
 ### Filtrar por Tipo de Interfaz
 
 ```hcl
-data "isard_network_interfaces" "bridges" {
+data "isardvdi_network_interfaces" "bridges" {
   filter = {
     kind = "bridge"
   }
@@ -38,14 +38,14 @@ output "interfaces_bridge" {
 ### Filtrar por Nombre
 
 ```hcl
-data "isard_network_interfaces" "wireguard" {
+data "isardvdi_network_interfaces" "wireguard" {
   filter = {
     name = "wireguard"
   }
 }
 
 # Usar en una VM
-resource "isard_vm" "con_vpn" {
+resource "isardvdi_vm" "con_vpn" {
   name        = "vm-con-vpn"
   template_id = data.isard_templates.ubuntu.templates[0].id
   
@@ -58,7 +58,7 @@ resource "isard_vm" "con_vpn" {
 ### Filtrar por Red
 
 ```hcl
-data "isard_network_interfaces" "public_bridge" {
+data "isardvdi_network_interfaces" "public_bridge" {
   filter = {
     net = "br-public"
   }
@@ -72,7 +72,7 @@ output "interfaces_publicas" {
 ### Múltiples Filtros
 
 ```hcl
-data "isard_network_interfaces" "ovs_bridges" {
+data "isardvdi_network_interfaces" "ovs_bridges" {
   filter = {
     kind = "ovs"
     name = "prod"  # Búsqueda parcial case-insensitive
@@ -83,7 +83,7 @@ data "isard_network_interfaces" "ovs_bridges" {
 ### Verificar Disponibilidad
 
 ```hcl
-data "isard_network_interfaces" "custom" {
+data "isardvdi_network_interfaces" "custom" {
   filter = {
     name = "custom-bridge"
   }
@@ -94,7 +94,7 @@ locals {
   interface_id     = local.interface_exists ? data.isard_network_interfaces.custom.interfaces[0].id : null
 }
 
-resource "isard_vm" "conditional" {
+resource "isardvdi_vm" "conditional" {
   count = local.interface_exists ? 1 : 0
   
   name        = "vm-conditional"
@@ -107,12 +107,12 @@ resource "isard_vm" "conditional" {
 
 ```hcl
 # Forma antigua (aún soportada)
-data "isard_network_interfaces" "wireguard_old" {
+data "isardvdi_network_interfaces" "wireguard_old" {
   name = "wireguard"  # Búsqueda exacta
 }
 
 # Forma nueva (recomendada)
-data "isard_network_interfaces" "wireguard_new" {
+data "isardvdi_network_interfaces" "wireguard_new" {
   filter = {
     name = "wireguard"  # Búsqueda parcial
   }
@@ -154,7 +154,7 @@ Los tipos disponibles son:
 - `personal` - Redes personales con VLAN
 
 ```hcl
-data "isard_network_interfaces" "by_type" {
+data "isardvdi_network_interfaces" "by_type" {
   filter = {
     kind = "bridge"
   }
@@ -169,7 +169,7 @@ La búsqueda de nombre es:
 
 ```hcl
 # Encuentra: "test-bridge", "bridge-public", "My Bridge"
-data "isard_network_interfaces" "with_bridge" {
+data "isardvdi_network_interfaces" "with_bridge" {
   filter = {
     name = "bridge"
   }
@@ -181,7 +181,7 @@ data "isard_network_interfaces" "with_bridge" {
 La búsqueda de red es exacta:
 
 ```hcl
-data "isard_network_interfaces" "br_public" {
+data "isardvdi_network_interfaces" "br_public" {
   filter = {
     net = "br-public"
   }
@@ -193,7 +193,7 @@ data "isard_network_interfaces" "br_public" {
 ### 1. Listar Todas las Interfaces Disponibles
 
 ```hcl
-data "isard_network_interfaces" "all" {}
+data "isardvdi_network_interfaces" "all" {}
 
 output "inventory" {
   value = {
@@ -210,7 +210,7 @@ output "inventory" {
 ### 2. Validar Interfaz Requerida
 
 ```hcl
-data "isard_network_interfaces" "required" {
+data "isardvdi_network_interfaces" "required" {
   filter = {
     name = "wireguard"
   }
@@ -228,13 +228,13 @@ resource "null_resource" "validate" {
 ### 3. Asignar Dinámicamente Interfaces a VMs
 
 ```hcl
-data "isard_network_interfaces" "available" {
+data "isardvdi_network_interfaces" "available" {
   filter = {
     kind = "bridge"
   }
 }
 
-resource "isard_vm" "team" {
+resource "isardvdi_vm" "team" {
   count = 3
   
   name        = "vm-team-${count.index + 1}"
@@ -250,7 +250,7 @@ resource "isard_vm" "team" {
 ### 4. Documentar Infraestructura
 
 ```hcl
-data "isard_network_interfaces" "all" {}
+data "isardvdi_network_interfaces" "all" {}
 
 output "network_infrastructure" {
   description = "Inventario completo de interfaces de red"

@@ -36,7 +36,7 @@ Interfaz limitada a usuarios de una categoría específica (ej: marketing).
 1. Configurar el provider en `provider.tf`:
 
 ```hcl
-provider "isard" {
+provider "isardvdi" {
   endpoint     = "isard.example.com"
   auth_method  = "form"
   cathegory_id = "default"
@@ -154,5 +154,5 @@ terraform destroy
 
 ## Ver También
 
-- [Documentación del recurso isard_network_interface](../../docs/resources/isard_network_interface.md)
-- [Documentación del data source isard_network_interfaces](../../docs/data-sources/isard_network_interfaces.md)
+- [Documentación del recurso isardvdi_network_interface](../../docs/resources/isardvdi_network_interface.md)
+- [Documentación del data source isardvdi_network_interfaces](../../docs/data-sources/isardvdi_network_interfaces.md)
