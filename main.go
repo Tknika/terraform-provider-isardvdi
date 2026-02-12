@@ -32,7 +32,7 @@ func main() {
 	opts := providerserver.ServeOpts{
 		// TODO: Update this string with the published name of your provider.
 		// Also update the createNewProvider function in internal/provider/provider.go.
-		Address: "registry.terraform.io/tknika/isard",
+		Address: "registry.terraform.io/tknika/isardvdi",
 		Debug:   debug,
 	}
 

@@ -1,11 +1,11 @@
 ---
-page_title: "isard_groups Data Source - terraform-provider-isard"
+page_title: "isardvdi_groups Data Source - terraform-provider-isardvdi"
 subcategory: ""
 description: |-
   Retrieve groups from Isard VDI.
 ---
 
-# Data Source: isard_groups
+# Data Source: isardvdi_groups
 
 Obtiene la lista de grupos disponibles en Isard VDI. Este data source es útil para encontrar grupos por nombre y obtener sus IDs para usarlos en recursos como `isard_deployment`.
 
@@ -14,7 +14,7 @@ Obtiene la lista de grupos disponibles en Isard VDI. Este data source es útil p
 ### Obtener Todos los Grupos
 
 ```hcl
-data "isard_groups" "todos" {}
+data "isardvdi_groups" "todos" {}
 
 output "lista_completa" {
   value = data.isard_groups.todos.groups
@@ -24,7 +24,7 @@ output "lista_completa" {
 ### Filtrar Grupos por Nombre
 
 ```hcl
-data "isard_groups" "wag_p" {
+data "isardvdi_groups" "wag_p" {
   name_filter = "WAG-P"
 }
 
@@ -36,15 +36,15 @@ output "grupo_wag_p" {
 ### Usar con Deployment Resource
 
 ```hcl
-data "isard_groups" "desarrollo" {
+data "isardvdi_groups" "desarrollo" {
   name_filter = "Desarrollo"
 }
 
-data "isard_templates" "ubuntu" {
+data "isardvdi_templates" "ubuntu" {
   name_filter = "Ubuntu Desktop"
 }
 
-resource "isard_deployment" "deploy_desarrollo" {
+resource "isardvdi_deployment" "deploy_desarrollo" {
   name         = "Deployment para Desarrollo"
   description  = "Desktops para el equipo de desarrollo"
   template_id  = data.isard_templates.ubuntu.templates[0].id
@@ -60,15 +60,15 @@ resource "isard_deployment" "deploy_desarrollo" {
 
 ```hcl
 # Estos tres ejemplos devolverán los mismos resultados
-data "isard_groups" "test1" {
+data "isardvdi_groups" "test1" {
   name_filter = "wag-p"
 }
 
-data "isard_groups" "test2" {
+data "isardvdi_groups" "test2" {
   name_filter = "WAG-P"
 }
 
-data "isard_groups" "test3" {
+data "isardvdi_groups" "test3" {
   name_filter = "WaG-p"
 }
 ```
@@ -76,7 +76,7 @@ data "isard_groups" "test3" {
 ### Filtrar por Categoría
 
 ```hcl
-data "isard_groups" "grupos_default" {
+data "isardvdi_groups" "grupos_default" {
   category_id = "default"
 }
 
@@ -89,7 +89,7 @@ output "grupos_categoria_default" {
 
 ```hcl
 # Buscar grupos que contengan "Dev" en la categoría "default"
-data "isard_groups" "dev_default" {
+data "isardvdi_groups" "dev_default" {
   name_filter = "Dev"
   category_id = "default"
 }
@@ -102,7 +102,7 @@ output "grupos_dev" {
 ### Verificar que Exista al Menos un Grupo
 
 ```hcl
-data "isard_groups" "produccion" {
+data "isardvdi_groups" "produccion" {
   name_filter = "Produccion"
 }
 
@@ -112,7 +112,7 @@ locals {
   group_id    = local.group_count > 0 ? data.isard_groups.produccion.groups[0].id : null
 }
 
-resource "isard_deployment" "prod_deploy" {
+resource "isardvdi_deployment" "prod_deploy" {
   count = local.group_count > 0 ? 1 : 0
   
   name         = "Deployment Producción"
@@ -166,28 +166,28 @@ Si tienes estos grupos:
 
 ```hcl
 # Devuelve: WAG-P
-data "isard_groups" "wag" {
+data "isardvdi_groups" "wag" {
   name_filter = "WAG"
 }
 
 # Devuelve: Desarrolladores, Soporte IT
-data "isard_groups" "tech" {
+data "isardvdi_groups" "tech" {
   category_id = "tecnologia"
 }
 
 # Devuelve: Default, WAG-P
-data "isard_groups" "default_cat" {
+data "isardvdi_groups" "default_cat" {
   category_id = "default"
 }
 
 # Devuelve: Soporte IT
-data "isard_groups" "soporte" {
+data "isardvdi_groups" "soporte" {
   name_filter = "soporte"
   category_id = "tecnologia"
 }
 
 # Devuelve: todos los grupos
-data "isard_groups" "todos" {}
+data "isardvdi_groups" "todos" {}
 ```
 
 ## Ejemplos Adicionales
@@ -195,7 +195,7 @@ data "isard_groups" "todos" {}
 ### Seleccionar Grupo Específico por Nombre Exacto
 
 ```hcl
-data "isard_groups" "busqueda" {
+data "isardvdi_groups" "busqueda" {
   name_filter = "WAG"
 }
 
@@ -207,7 +207,7 @@ locals {
   ][0]
 }
 
-resource "isard_deployment" "deploy" {
+resource "isardvdi_deployment" "deploy" {
   name         = "Deployment para WAG-P"
   template_id  = "template-id"
   desktop_name = "Desktop-WAG"
@@ -221,7 +221,7 @@ resource "isard_deployment" "deploy" {
 ### Listar Información de Grupos
 
 ```hcl
-data "isard_groups" "todos" {}
+data "isardvdi_groups" "todos" {}
 
 output "grupos_info" {
   value = {
@@ -238,15 +238,15 @@ output "grupos_info" {
 ### Crear Deployment para Múltiples Grupos
 
 ```hcl
-data "isard_groups" "equipos" {
+data "isardvdi_groups" "equipos" {
   name_filter = "Equipo"
 }
 
-data "isard_templates" "ubuntu" {
+data "isardvdi_templates" "ubuntu" {
   name_filter = "Ubuntu"
 }
 
-resource "isard_deployment" "multi_equipo" {
+resource "isardvdi_deployment" "multi_equipo" {
   for_each = { 
     for idx, grp in data.isard_groups.equipos.groups : 
     grp.name => grp 
@@ -266,15 +266,15 @@ resource "isard_deployment" "multi_equipo" {
 ### Obtener IDs de Grupos para Permisos
 
 ```hcl
-data "isard_groups" "admin" {
+data "isardvdi_groups" "admin" {
   name_filter = "Administradores"
 }
 
-data "isard_groups" "users" {
+data "isardvdi_groups" "users" {
   name_filter = "Usuarios"
 }
 
-resource "isard_network_interface" "shared_network" {
+resource "isardvdi_network_interface" "shared_network" {
   name        = "Red Compartida"
   description = "Red accesible por admins y usuarios"
   net         = "br-shared"

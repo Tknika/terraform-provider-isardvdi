@@ -2,14 +2,14 @@
 
 terraform {
   required_providers {
-    isard = {
-      source = "registry.terraform.io/tknika/isard"
+    isardvdi = {
+      source = "registry.terraform.io/tknika/isardvdi"
     }
   }
 }
 
 # Configuración usando token JWT
-provider "isard" {
+provider "isardvdi" {
   endpoint     = "localhost"
   auth_method  = "token"
   cathegory_id = "default"
@@ -17,20 +17,20 @@ provider "isard" {
 }
 
 # Obtener templates
-data "isard_templates" "all" {}
+data "isardvdi_templates" "all" {}
 
 # Crear desktop
-resource "isard_vm" "token_auth_example" {
+resource "isardvdi_vm" "token_auth_example" {
   name        = "desktop-token-auth"
   description = "Desktop creado usando autenticación por token"
-  template_id = data.isard_templates.all.templates[0].id
+  template_id = data.isardvdi_templates.all.templates[0].id
 }
 
 # Outputs
 output "desktop_creado" {
   value = {
-    id          = isard_vm.token_auth_example.id
-    name        = isard_vm.token_auth_example.name
-    description = isard_vm.token_auth_example.description
+    id          = isardvdi_vm.token_auth_example.id
+    name        = isardvdi_vm.token_auth_example.name
+    description = isardvdi_vm.token_auth_example.description
   }
 }

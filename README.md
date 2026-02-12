@@ -6,27 +6,27 @@ Provider de Terraform para gestionar recursos en Isard VDI a través de su API v
 
 ### Recursos
 
-- ✅ **isard_vm** - Creación, lectura y eliminación de desktops persistentes con soporte para:
+- ✅ **isardvdi_vm** - Creación, lectura y eliminación de desktops persistentes con soporte para:
   - Hardware personalizado (vCPUs, memoria)
   - Interfaces de red personalizadas
   - Medios ISO y floppy adjuntos
   - Parada forzada optimizada antes de destruir (force_stop_on_destroy con 10s timeout)
-- ✅ **isard_deployment** - Gestión de deployments para crear múltiples desktops para usuarios/grupos con:
+- ✅ **isardvdi_deployment** - Gestión de deployments para crear múltiples desktops para usuarios/grupos con:
   - Hardware personalizado
   - Medios ISO y floppy adjuntos
   - Manejo automático de error 428 (VMs en ejecución) con retry inteligente
-- ✅ **isard_media** - Gestión de medios (ISOs y floppies) para adjuntar a VMs
-- ✅ **isard_network** - Gestión de redes virtuales de usuario
-- ✅ **isard_network_interface** - Gestión de interfaces de red del sistema (requiere admin)
-- ✅ **isard_qos_net** - Gestión de perfiles QoS de red (requiere admin)
+- ✅ **isardvdi_media** - Gestión de medios (ISOs y floppies) para adjuntar a VMs
+- ✅ **isardvdi_network** - Gestión de redes virtuales de usuario
+- ✅ **isardvdi_network_interface** - Gestión de interfaces de red del sistema (requiere admin)
+- ✅ **isardvdi_qos_net** - Gestión de perfiles QoS de red (requiere admin)
 
 ### Data Sources
 
-- ✅ **isard_templates** - Listado de templates disponibles con filtrado por nombre
-- ✅ **isard_network_interfaces** - Consulta de interfaces de red del sistema con filtros avanzados
-- ✅ **isard_groups** - Consulta de grupos del sistema con filtrado por nombre y categoría
-- ✅ **isard_users** - Consulta de usuarios del sistema con múltiples filtros (nombre, username, email, categoría, grupo, rol)
-- ✅ **isard_medias** - Consulta de medios disponibles con filtros avanzados (nombre, tipo, estado, categoría, grupo, usuario)
+- ✅ **isardvdi_templates** - Listado de templates disponibles con filtrado por nombre
+- ✅ **isardvdi_network_interfaces** - Consulta de interfaces de red del sistema con filtros avanzados
+- ✅ **isardvdi_groups** - Consulta de grupos del sistema con filtrado por nombre y categoría
+- ✅ **isardvdi_users** - Consulta de usuarios del sistema con múltiples filtros (nombre, username, email, categoría, grupo, rol)
+- ✅ **isardvdi_medias** - Consulta de medios disponibles con filtros avanzados (nombre, tipo, estado, categoría, grupo, usuario)
 
 ### Autenticación
 
@@ -59,7 +59,7 @@ go build -o terraform-provider-isard
 ```hcl
 provider_installation {
   dev_overrides {
-    "tknika/isard" = "/home/tu-usuario/source/isard-terraform-provider"
+    "tknika/isardvdi" = "/home/tu-usuario/source/isard-terraform-provider"
   }
   direct {}
 }
@@ -70,8 +70,8 @@ provider_installation {
 ```hcl
 terraform {
   required_providers {
-    isard = {
-      source  = "registry.terraform.io/tknika/isard"
+    isardvdi = {
+      source  = "registry.terraform.io/tknika/isardvdi"
       version = "~> 1.0"
     }
   }
@@ -82,7 +82,7 @@ terraform {
 
 ```hcl
 # Configurar el provider
-provider "isard" {
+provider "isardvdi" {
   endpoint     = "localhost"
   auth_method  = "form"
   cathegory_id = "default"
@@ -92,27 +92,27 @@ provider "isard" {
 }
 
 # Obtener templates disponibles
-data "isard_templates" "ubuntu" {
+data "isardvdi_templates" "ubuntu" {
   name_filter = "Ubuntu"
 }
 
 # Obtener grupos por nombre
-data "isard_groups" "desarrollo" {
+data "isardvdi_groups" "desarrollo" {
   name_filter = "Desarrollo"
 }
 
 # Crear un desktop persistente
-resource "isard_vm" "mi_desktop" {
+resource "isardvdi_vm" "mi_desktop" {
   name        = "mi-desktop-terraform"
   description = "Desktop creado con Terraform"
-  template_id = data.isard_templates.ubuntu.templates[0].id
+  template_id = data.isardvdi_templates.ubuntu.templates[0].id
 }
 
 # Crear un deployment para un equipo
-resource "isard_deployment" "equipo_dev" {
+resource "isardvdi_deployment" "equipo_dev" {
   name         = "Deployment Equipo Dev"
   description  = "Desktops para el equipo de desarrollo"
-  template_id  = data.isard_templates.ubuntu.templates[0].id
+  template_id  = data.isardvdi_templates.ubuntu.templates[0].id
   desktop_name = "Desktop Dev"
   visible      = false
   
@@ -120,12 +120,12 @@ resource "isard_deployment" "equipo_dev" {
   memory = 8.0
 
   allowed {
-    groups = [data.isard_groups.desarrollo.groups[0].id]
+    groups = [data.isardvdi_groups.desarrollo.groups[0].id]
   }
 }
 
 # Crear una red virtual
-resource "isard_network" "mi_red" {
+resource "isardvdi_network" "mi_red" {
   name        = "Red de Desarrollo"
   description = "Red virtual para desarrollo"
   model       = "virtio"
@@ -133,7 +133,7 @@ resource "isard_network" "mi_red" {
 }
 
 # Crear interfaz de red del sistema (requiere admin)
-resource "isard_network_interface" "bridge_custom" {
+resource "isardvdi_network_interface" "bridge_custom" {
   id          = "bridge-custom"
   name        = "Bridge Personalizado"
   description = "Bridge para entorno custom"
@@ -152,14 +152,14 @@ resource "isard_network_interface" "bridge_custom" {
 }
 
 # Crear VM con interfaces personalizadas
-resource "isard_vm" "vm_custom" {
+resource "isardvdi_vm" "vm_custom" {
   name        = "vm-con-red-custom"
   description = "VM con interfaces personalizadas"
-  template_id = data.isard_templates.ubuntu.templates[0].id
+  template_id = data.isardvdi_templates.ubuntu.templates[0].id
   
   interfaces = [
     "wireguard",  # Requerido para RDP
-    isard_network_interface.bridge_custom.id
+    isardvdi_network_interface.bridge_custom.id
   ]
 }
 ```
@@ -172,20 +172,20 @@ resource "isard_vm" "vm_custom" {
 
 ### Recursos
 
-- [Resource: isard_vm](docs/resources/isard_vm.md) - Gestión de VMs/desktops
-- [Resource: isard_deployment](docs/resources/deployment.md) - Gestión de deployments
-- [Resource: isard_media](docs/resources/isard_media.md) - Gestión de medios (ISOs y floppies)
-- [Resource: isard_network](docs/resources/isard_network.md) - Redes virtuales de usuario
-- [Resource: isard_network_interface](docs/resources/isard_network_interface.md) - Interfaces de red del sistema
-- [Resource: isard_qos_net](docs/resources/isard_qos_net.md) - Perfiles QoS de red
+- [Resource: isardvdi_vm](docs/resources/isardvdi_vm.md) - Gestión de VMs/desktops
+- [Resource: isardvdi_deployment](docs/resources/isardvdi_deployment.md) - Gestión de deployments
+- [Resource: isardvdi_media](docs/resources/isardvdi_media.md) - Gestión de medios (ISOs y floppies)
+- [Resource: isardvdi_network](docs/resources/isardvdi_network.md) - Redes virtuales de usuario
+- [Resource: isardvdi_network_interface](docs/resources/isardvdi_network_interface.md) - Interfaces de red del sistema
+- [Resource: isardvdi_qos_net](docs/resources/isardvdi_qos_net.md) - Perfiles QoS de red
 
 ### Data Sources
 
-- [Data Source: isard_templates](docs/data-sources/isard_templates.md) - Consulta de templates
-- [Data Source: isard_users](docs/data-sources/isard_users.md) - Consulta de usuarios con filtros avanzados
-- [Data Source: isard_medias](docs/data-sources/isard_medias.md) - Consulta de medios (ISOs y floppies)
-- [Data Source: isard_network_interfaces](docs/data-sources/isard_network_interfaces.md) - Consulta de interfaces
-- [Data Source: isard_groups](docs/data-sources/isard_groups.md) - Consulta de grupos
+- [Data Source: isardvdi_templates](docs/data-sources/isardvdi_templates.md) - Consulta de templates
+- [Data Source: isardvdi_users](docs/data-sources/isardvdi_users.md) - Consulta de usuarios con filtros avanzados
+- [Data Source: isardvdi_medias](docs/data-sources/isardvdi_medias.md) - Consulta de medios (ISOs y floppies)
+- [Data Source: isardvdi_network_interfaces](docs/data-sources/isardvdi_network_interfaces.md) - Consulta de interfaces
+- [Data Source: isardvdi_groups](docs/data-sources/isardvdi_groups.md) - Consulta de grupos
 
 ## Ejemplos
 

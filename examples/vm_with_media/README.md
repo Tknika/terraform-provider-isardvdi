@@ -15,7 +15,7 @@ Los medios adjuntos son útiles para:
 
 ### 1. VM con ISO Específico
 ```hcl
-resource "isard_vm" "windows_with_drivers" {
+resource "isardvdi_vm" "windows_with_drivers" {
   name        = "Windows VM con Drivers"
   template_id = "windows-template-id"
   isos        = ["virtio-drivers-iso-id"]
@@ -25,7 +25,7 @@ Adjunta un ISO de drivers VirtIO a una VM de Windows.
 
 ### 2. VM con Múltiples ISOs
 ```hcl
-resource "isard_vm" "lab_vm" {
+resource "isardvdi_vm" "lab_vm" {
   name        = "VM de Laboratorio"
   template_id = "template-id"
   isos = [
@@ -39,17 +39,17 @@ Adjunta múltiples ISOs para diferentes propósitos.
 
 ### 3. VM con Data Source
 ```hcl
-data "isard_medias" "ubuntu_iso" {
+data "isardvdi_medias" "ubuntu_iso" {
   name_filter = "Ubuntu 22.04"
   kind        = "iso"
   status      = "Downloaded"
 }
 
-resource "isard_vm" "ubuntu_vm" {
+resource "isardvdi_vm" "ubuntu_vm" {
   name        = "Ubuntu Desktop"
   template_id = "template-id"
-  isos = length(data.isard_medias.ubuntu_iso.medias) > 0 ? [
-    data.isard_medias.ubuntu_iso.medias[0].id
+  isos = length(data.isardvdi_medias.ubuntu_iso.medias) > 0 ? [
+    data.isardvdi_medias.ubuntu_iso.medias[0].id
   ] : []
 }
 ```
@@ -57,7 +57,7 @@ Busca dinámicamente ISOs y los adjunta.
 
 ### 4. VM con Floppy
 ```hcl
-resource "isard_vm" "legacy_vm" {
+resource "isardvdi_vm" "legacy_vm" {
   name        = "VM Legacy"
   template_id = "template-id"
   floppies    = ["driver-floppy-id"]
@@ -69,14 +69,14 @@ Para casos legacy que requieren disquetes.
 
 ### Método 1: Data Source (Recomendado)
 ```hcl
-data "isard_medias" "my_iso" {
+data "isardvdi_medias" "my_iso" {
   name_filter = "Ubuntu"
   kind        = "iso"
   status      = "Downloaded"
 }
 
 # Usar el primer resultado
-isos = [data.isard_medias.my_iso.medias[0].id]
+isos = [data.isardvdi_medias.my_iso.medias[0].id]
 ```
 
 ### Método 2: ID Directo
@@ -87,11 +87,11 @@ isos = ["a1b2c3d4-e5f6-7890-abcd-ef1234567890"]
 
 ### Método 3: Listar Todos
 ```hcl
-data "isard_medias" "all" {}
+data "isardvdi_medias" "all" {}
 
 output "available_isos" {
   value = {
-    for media in data.isard_medias.all.medias :
+    for media in data.isardvdi_medias.all.medias :
     media.name => media.id
     if media.kind == "iso" && media.status == "Downloaded"
   }
@@ -124,16 +124,16 @@ isos = [
 Antes de crear VMs, verifica qué medios están disponibles:
 
 ```bash
-terraform plan -target=data.isard_medias.all
+terraform plan -target=data.isardvdi_medias.all
 ```
 
 O usa outputs:
 ```hcl
-data "isard_medias" "all" {}
+data "isardvdi_medias" "all" {}
 
 output "available_medias" {
   value = [
-    for media in data.isard_medias.all.medias : {
+    for media in data.isardvdi_medias.all.medias : {
       name   = media.name
       id     = media.id
       status = media.status
@@ -154,13 +154,13 @@ output "available_medias" {
 
 ```hcl
 # Buscar medios necesarios
-data "isard_medias" "os_iso" {
+data "isardvdi_medias" "os_iso" {
   name_filter = "Ubuntu 22.04"
   kind        = "iso"
   status      = "Downloaded"
 }
 
-data "isard_medias" "drivers" {
+data "isardvdi_medias" "drivers" {
   name_filter = "VirtIO"
   kind        = "iso"
   status      = "Downloaded"
@@ -169,18 +169,18 @@ data "isard_medias" "drivers" {
 # Verificar disponibilidad con check
 check "medias_available" {
   assert {
-    condition     = length(data.isard_medias.os_iso.medias) > 0
+    condition     = length(data.isardvdi_medias.os_iso.medias) > 0
     error_message = "Ubuntu 22.04 ISO no está disponible"
   }
   
   assert {
-    condition     = length(data.isard_medias.drivers.medias) > 0
+    condition     = length(data.isardvdi_medias.drivers.medias) > 0
     error_message = "VirtIO drivers ISO no está disponible"
   }
 }
 
 # Crear VM solo si los medios están disponibles
-resource "isard_vm" "production_vm" {
+resource "isardvdi_vm" "production_vm" {
   name        = "Production VM"
   description = "VM con OS y drivers"
   template_id = "template-id"
@@ -190,8 +190,8 @@ resource "isard_vm" "production_vm" {
   
   # Adjuntar ISOs verificados
   isos = [
-    data.isard_medias.os_iso.medias[0].id,      # Sistema operativo
-    data.isard_medias.drivers.medias[0].id       # Drivers
+    data.isardvdi_medias.os_iso.medias[0].id,      # Sistema operativo
+    data.isardvdi_medias.drivers.medias[0].id       # Drivers
   ]
   
   force_stop_on_destroy = true
@@ -233,6 +233,6 @@ Error: Template does not support media attachments
 
 ## Más Información
 
-- Ver [isard_medias data source](../../docs/data-sources/isard_medias.md) para buscar medios
-- Ver [isard_media resource](../../docs/resources/isard_media.md) para crear nuevos medios
-- Ver [isard_vm resource](../../docs/resources/isard_vm.md) para documentación completa de VMs
+- Ver [isardvdi_medias data source](../../docs/data-sources/isardvdi_medias.md) para buscar medios
+- Ver [isardvdi_media resource](../../docs/resources/isardvdi_media.md) para crear nuevos medios
+- Ver [isardvdi_vm resource](../../docs/resources/isardvdi_vm.md) para documentación completa de VMs

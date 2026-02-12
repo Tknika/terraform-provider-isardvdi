@@ -47,7 +47,7 @@ func New(version string) func() provider.Provider {
 
 // Metadata returns the provider type name.
 func (p *IsardProvider) Metadata(_ context.Context, _ provider.MetadataRequest, resp *provider.MetadataResponse) {
-	resp.TypeName = "isard"
+	resp.TypeName = "isardvdi"
 	resp.Version = p.version
 }
 

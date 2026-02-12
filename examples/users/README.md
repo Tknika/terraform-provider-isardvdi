@@ -1,13 +1,13 @@
-# Ejemplo de uso del Data Source isard_users
+# Ejemplo de uso del Data Source isardvdi_users
 
-Este ejemplo demuestra cómo usar el data source `isard_users` para buscar usuarios en Isard VDI.
+Este ejemplo demuestra cómo usar el data source `isardvdi_users` para buscar usuarios en Isard VDI.
 
 ## Configuración
 
 Asegúrate de tener configurado el provider de Isard en tu archivo principal o en un archivo separado:
 
 ```terraform
-provider "isard" {
+provider "isardvdi" {
   endpoint    = "isard.example.com"
   auth_method = "token"
   token       = "your-api-token"
@@ -49,12 +49,12 @@ Los outputs mostrarán:
 ### 1. Encontrar el ID de un usuario para asignarlo a un recurso
 
 ```terraform
-data "isard_users" "john" {
+data "isardvdi_users" "john" {
   name_filter = "John Doe"
 }
 
-resource "isard_vm" "johns_desktop" {
-  name        = "Desktop-${data.isard_users.john.users[0].username}"
+resource "isardvdi_vm" "johns_desktop" {
+  name        = "Desktop-${data.isardvdi_users.john.users[0].username}"
   template_id = "template-123"
   # Otros atributos...
 }
@@ -63,12 +63,12 @@ resource "isard_vm" "johns_desktop" {
 ### 2. Listar todos los administradores
 
 ```terraform
-data "isard_users" "admins" {
+data "isardvdi_users" "admins" {
   role = "admin"
 }
 
 output "admin_list" {
-  value = [for user in data.isard_users.admins.users : {
+  value = [for user in data.isardvdi_users.admins.users : {
     name  = user.name
     email = user.email
   }]
@@ -78,12 +78,12 @@ output "admin_list" {
 ### 3. Verificar usuarios activos en una categoría
 
 ```terraform
-data "isard_users" "active_users" {
+data "isardvdi_users" "active_users" {
   category_id = "production"
   active      = true
 }
 
 output "active_user_count" {
-  value = length(data.isard_users.active_users.users)
+  value = length(data.isardvdi_users.active_users.users)
 }
 ```

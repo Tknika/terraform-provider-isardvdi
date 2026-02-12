@@ -1,11 +1,11 @@
 ---
-page_title: "isard_users Data Source - terraform-provider-isard"
+page_title: "isardvdi_users Data Source - terraform-provider-isardvdi"
 subcategory: ""
 description: |-
   Fetches the list of users from Isard VDI with optional filtering capabilities.
 ---
 
-# isard_users (Data Source)
+# isardvdi_users (Data Source)
 
 Este data source permite obtener información sobre usuarios en Isard VDI. Puedes filtrar usuarios por nombre, categoría, grupo, rol y estado activo.
 
@@ -13,7 +13,7 @@ Este data source permite obtener información sobre usuarios en Isard VDI. Puede
 
 ```terraform
 # Buscar usuarios por nombre
-data "isard_users" "admins" {
+data "isardvdi_users" "admins" {
   name_filter = "admin"
 }
 
@@ -23,23 +23,23 @@ output "first_admin_id" {
 }
 
 # Filtrar usuarios por categoría
-data "isard_users" "category_users" {
+data "isardvdi_users" "category_users" {
   category_id = "default"
 }
 
 # Filtrar usuarios activos de un grupo específico
-data "isard_users" "active_group_users" {
+data "isardvdi_users" "active_group_users" {
   group_id = "default-default-default"
   active   = true
 }
 
 # Filtrar por rol
-data "isard_users" "managers" {
+data "isardvdi_users" "managers" {
   role = "manager"
 }
 
 # Combinar múltiples filtros
-data "isard_users" "specific_users" {
+data "isardvdi_users" "specific_users" {
   name_filter = "john"
   category_id = "default"
   role        = "user"
@@ -82,12 +82,12 @@ Un caso común es buscar un usuario específico por nombre para obtener su ID y 
 
 ```terraform
 # Buscar un usuario específico
-data "isard_users" "john_doe" {
+data "isardvdi_users" "john_doe" {
   name_filter = "John Doe"
 }
 
 # Usar el ID del usuario en otro recurso
-resource "isard_vm" "user_desktop" {
+resource "isardvdi_vm" "user_desktop" {
   name        = "Desktop for ${data.isard_users.john_doe.users[0].name}"
   template_id = "some-template-id"
   # Otros atributos...

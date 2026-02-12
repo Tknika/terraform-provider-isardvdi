@@ -1,6 +1,6 @@
 # Ejemplo de Media
 
-Este ejemplo demuestra cómo gestionar archivos multimedia (ISOs, imágenes de disco) en Isard VDI usando el resource `isard_media`.
+Este ejemplo demuestra cómo gestionar archivos multimedia (ISOs, imágenes de disco) en Isard VDI usando el resource `isardvdi_media`.
 
 ## Configuración
 
@@ -89,20 +89,20 @@ terraform destroy
 
 ## Ejemplo con Data Source de Usuarios
 
-Puedes combinar con el data source `isard_users` para asignar permisos:
+Puedes combinar con el data source `isardvdi_users` para asignar permisos:
 
 ```hcl
-data "isard_users" "admins" {
+data "isardvdi_users" "admins" {
   role = "admin"
 }
 
-resource "isard_media" "restricted_iso" {
+resource "isardvdi_media" "restricted_iso" {
   name = "Restricted Software"
   url  = "https://example.com/software.iso"
   kind = "iso"
   
   allowed {
-    users = data.isard_users.admins.users[*].id
+    users = data.isardvdi_users.admins.users[*].id
   }
 }
 ```

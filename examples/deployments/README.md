@@ -31,7 +31,7 @@ Este ejemplo incluye varios tipos de deployments:
 
 2. Edita `terraform.tfvars` y configura tus valores:
    ```hcl
-   isard_token = "tu-token-aqui"
+   isardvdi_token = "tu-token-aqui"
    template_id = "tu-template-uuid-aqui"
    ```
 
@@ -52,7 +52,7 @@ Este ejemplo incluye varios tipos de deployments:
 
 ## Variables Requeridas
 
-- `isard_token`: Token de autenticación para Isard VDI
+- `isardvdi_token`: Token de autenticación para Isard VDI
 - `template_id`: ID de la plantilla que se usará para crear los desktops
 
 ## Personalización

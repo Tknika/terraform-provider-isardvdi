@@ -1,7 +1,7 @@
 # Ejemplo de uso del recurso isard_network_interface
 
 # Crear una interfaz de red tipo bridge básica
-resource "isard_network_interface" "vlan100" {
+resource "isardvdi_network_interface" "vlan100" {
   id          = "bridge-vlan-100"
   name        = "VLAN 100 Bridge"
   description = "Bridge para VLAN 100 - Red de desarrollo"
@@ -13,7 +13,7 @@ resource "isard_network_interface" "vlan100" {
 }
 
 # Crear interfaz visible para todos los usuarios
-resource "isard_network_interface" "public_bridge" {
+resource "isardvdi_network_interface" "public_bridge" {
   id          = "bridge-public"
   name        = "Bridge Público"
   description = "Interfaz visible para todos"
@@ -33,7 +33,7 @@ resource "isard_network_interface" "public_bridge" {
 }
 
 # Crear interfaz solo para administradores
-resource "isard_network_interface" "admin_bridge" {
+resource "isardvdi_network_interface" "admin_bridge" {
   id          = "bridge-admin"
   name        = "Bridge Administradores"
   description = "Solo para administradores"
@@ -52,7 +52,7 @@ resource "isard_network_interface" "admin_bridge" {
 }
 
 # Crear interfaz para categoría específica
-resource "isard_network_interface" "category_bridge" {
+resource "isardvdi_network_interface" "category_bridge" {
   id          = "bridge-marketing"
   name        = "Bridge Marketing"
   description = "Para categoría marketing"
@@ -72,7 +72,7 @@ resource "isard_network_interface" "category_bridge" {
 # Ejemplos de diferentes tipos de kind
 
 # Interfaz tipo OVS
-resource "isard_network_interface" "ovs_example" {
+resource "isardvdi_network_interface" "ovs_example" {
   id          = "ovs-vlan-2056"
   name        = "OVS VLAN 2056"
   description = "Interfaz OVS con VLAN 2056"
@@ -84,7 +84,7 @@ resource "isard_network_interface" "ovs_example" {
 }
 
 # Interfaz tipo network
-resource "isard_network_interface" "network_example" {
+resource "isardvdi_network_interface" "network_example" {
   id          = "network1-interface"
   name        = "Network 1"
   description = "Red libvirt"
@@ -96,7 +96,7 @@ resource "isard_network_interface" "network_example" {
 }
 
 # Interfaz tipo personal (rango VLAN)
-resource "isard_network_interface" "personal_example" {
+resource "isardvdi_network_interface" "personal_example" {
   id          = "personal-vlan-range"
   name        = "Personal VLAN Range"
   description = "Rango VLAN personal 1000-1500"
@@ -111,31 +111,31 @@ resource "isard_network_interface" "personal_example" {
 output "interfaces_info" {
   value = {
     vlan100 = {
-      id   = isard_network_interface.vlan100.id
-      name = isard_network_interface.vlan100.name
+      id   = isardvdi_network_interface.vlan100.id
+      name = isardvdi_network_interface.vlan100.name
     }
     public = {
-      id   = isard_network_interface.public_bridge.id
-      name = isard_network_interface.public_bridge.name
+      id   = isardvdi_network_interface.public_bridge.id
+      name = isardvdi_network_interface.public_bridge.name
     }
     admin = {
-      id   = isard_network_interface.admin_bridge.id
-      name = isard_network_interface.admin_bridge.name
+      id   = isardvdi_network_interface.admin_bridge.id
+      name = isardvdi_network_interface.admin_bridge.name
     }
     ovs = {
-      id   = isard_network_interface.ovs_example.id
-      name = isard_network_interface.ovs_example.name
-      kind = isard_network_interface.ovs_example.kind
+      id   = isardvdi_network_interface.ovs_example.id
+      name = isardvdi_network_interface.ovs_example.name
+      kind = isardvdi_network_interface.ovs_example.kind
     }
     network = {
-      id   = isard_network_interface.network_example.id
-      name = isard_network_interface.network_example.name
-      kind = isard_network_interface.network_example.kind
+      id   = isardvdi_network_interface.network_example.id
+      name = isardvdi_network_interface.network_example.name
+      kind = isardvdi_network_interface.network_example.kind
     }
     personal = {
-      id   = isard_network_interface.personal_example.id
-      name = isard_network_interface.personal_example.name
-      kind = isard_network_interface.personal_example.kind
+      id   = isardvdi_network_interface.personal_example.id
+      name = isardvdi_network_interface.personal_example.name
+      kind = isardvdi_network_interface.personal_example.kind
     }
   }
 }

@@ -1,11 +1,11 @@
 ---
-page_title: "isard_deployment Resource - terraform-provider-isard"
+page_title: "isardvdi_deployment Resource - terraform-provider-isardvdi"
 subcategory: ""
 description: |-
   Manages a deployment in Isard VDI.
 ---
 
-# isard_deployment (Resource)
+# isardvdi_deployment (Resource)
 
 Gestiona un deployment en Isard VDI. Los deployments permiten crear múltiples desktops a partir de una plantilla para diferentes usuarios, grupos o categorías.
 
@@ -13,7 +13,7 @@ Gestiona un deployment en Isard VDI. Los deployments permiten crear múltiples d
 
 ```terraform
 # Crear un deployment básico
-resource "isard_deployment" "example" {
+resource "isardvdi_deployment" "example" {
   name         = "Deployment de Prueba"
   description  = "Deployment para el equipo de desarrollo"
   template_id  = "template-uuid-123"
@@ -26,7 +26,7 @@ resource "isard_deployment" "example" {
 }
 
 # Deployment con hardware personalizado
-resource "isard_deployment" "custom_hardware" {
+resource "isardvdi_deployment" "custom_hardware" {
   name         = "Deployment Alto Rendimiento"
   description  = "Deployment con recursos mejorados"
   template_id  = "template-uuid-456"
@@ -43,7 +43,7 @@ resource "isard_deployment" "custom_hardware" {
 }
 
 # Deployment para una categoría completa
-resource "isard_deployment" "category_deployment" {
+resource "isardvdi_deployment" "category_deployment" {
   name         = "Deployment Estudiantes"
   description  = "Desktops para todos los estudiantes"
   template_id  = "template-uuid-789"
@@ -58,7 +58,7 @@ resource "isard_deployment" "category_deployment" {
 }
 
 # Deployment con múltiples interfaces de red
-resource "isard_deployment" "network_deployment" {
+resource "isardvdi_deployment" "network_deployment" {
   name         = "Deployment Red Avanzada"
   description  = "Deployment con configuración de red compleja"
   template_id  = "template-uuid-abc"
@@ -77,7 +77,7 @@ resource "isard_deployment" "network_deployment" {
 }
 
 # Deployment con viewers específicos
-resource "isard_deployment" "custom_viewers" {
+resource "isardvdi_deployment" "custom_viewers" {
   name         = "Deployment con Viewers Personalizados"
   description  = "Deployment con solo viewers web"
   template_id  = "template-uuid-def"
@@ -93,7 +93,7 @@ resource "isard_deployment" "custom_viewers" {
 }
 
 # Deployment con force_stop_on_destroy habilitado
-resource "isard_deployment" "safe_destroy" {
+resource "isardvdi_deployment" "safe_destroy" {
   name         = "Deployment con Stop Automático"
   description  = "Las VMs se detendrán antes de eliminar"
   template_id  = "template-uuid-xyz"
@@ -109,7 +109,7 @@ resource "isard_deployment" "safe_destroy" {
 }
 
 # Deployment con ISOs adjuntos
-resource "isard_deployment" "with_media" {
+resource "isardvdi_deployment" "with_media" {
   name         = "Deployment con ISOs"
   description  = "Deployment con medios ISO adjuntos"
   template_id  = "template-uuid-abc"
@@ -128,13 +128,13 @@ resource "isard_deployment" "with_media" {
 }
 
 # Deployment con medios usando data source
-data "isard_medias" "installation_iso" {
+data "isardvdi_medias" "installation_iso" {
   name_filter = "Windows Server"
   kind        = "iso"
   status      = "Downloaded"
 }
 
-resource "isard_deployment" "windows_deployment" {
+resource "isardvdi_deployment" "windows_deployment" {
   name         = "Deployment Windows"
   description  = "Deployment con ISO de instalación"
   template_id  = "windows-template-uuid"
@@ -155,7 +155,7 @@ resource "isard_deployment" "windows_deployment" {
 }
 
 # Deployment con todos los viewers disponibles
-resource "isard_deployment" "all_viewers" {
+resource "isardvdi_deployment" "all_viewers" {
   name         = "Deployment Acceso Completo"
   description  = "Deployment con todos los métodos de acceso"
   template_id  = "template-uuid-ghi"

@@ -1,11 +1,11 @@
 ---
-page_title: "isard_vm Resource - terraform-provider-isard"
+page_title: "isardvdi_vm Resource - terraform-provider-isardvdi"
 subcategory: ""
 description: |-
   Manages a persistent desktop in Isard VDI.
 ---
 
-# Resource: isard_vm
+# Resource: isardvdi_vm
 
 Gestiona un desktop persistente en Isard VDI.
 
@@ -14,7 +14,7 @@ Gestiona un desktop persistente en Isard VDI.
 ### Ejemplo Básico
 
 ```hcl
-resource "isard_vm" "ejemplo" {
+resource "isardvdi_vm" "ejemplo" {
   name        = "mi-desktop"
   description = "Desktop de desarrollo"
   template_id = "60aca659-d627-4f30-a894-52da23c18212"
@@ -24,11 +24,11 @@ resource "isard_vm" "ejemplo" {
 ### Con Data Source
 
 ```hcl
-data "isard_templates" "ubuntu" {
+data "isardvdi_templates" "ubuntu" {
   name_filter = "Ubuntu"
 }
 
-resource "isard_vm" "desarrollo" {
+resource "isardvdi_vm" "desarrollo" {
   name        = "desktop-desarrollo"
   description = "Desktop Ubuntu para desarrollo"
   template_id = data.isard_templates.ubuntu.templates[0].id
@@ -38,7 +38,7 @@ resource "isard_vm" "desarrollo" {
 ### Múltiples Desktops
 
 ```hcl
-resource "isard_vm" "equipo" {
+resource "isardvdi_vm" "equipo" {
   count = 3
   
   name        = "desktop-dev-${count.index + 1}"
@@ -50,7 +50,7 @@ resource "isard_vm" "equipo" {
 ### Con Hardware Personalizado
 
 ```hcl
-resource "isard_vm" "potente" {
+resource "isardvdi_vm" "potente" {
   name        = "desktop-potente"
   description = "Desktop con recursos aumentados"
   template_id = data.isard_templates.ubuntu.templates[0].id
@@ -63,10 +63,10 @@ resource "isard_vm" "potente" {
 
 ```hcl
 # Buscar interfaces disponibles
-data "isard_network_interfaces" "all" {}
+data "isardvdi_network_interfaces" "all" {}
 
 # Crear VM con interfaces específicas
-resource "isard_vm" "con_red" {
+resource "isardvdi_vm" "con_red" {
   name        = "desktop-con-red-custom"
   description = "Desktop con interfaces personalizadas"
   template_id = data.isard_templates.ubuntu.templates[0].id
@@ -82,7 +82,7 @@ resource "isard_vm" "con_red" {
 ### Con Force Stop on Destroy
 
 ```hcl
-resource "isard_vm" "produccion" {
+resource "isardvdi_vm" "produccion" {
   name        = "desktop-produccion"
   description = "Desktop de producción con stop seguro"
   template_id = data.isard_templates.ubuntu.templates[0].id
@@ -96,13 +96,13 @@ resource "isard_vm" "produccion" {
 
 ```hcl
 # Buscar ISOs disponibles
-data "isard_medias" "ubuntu_iso" {
+data "isardvdi_medias" "ubuntu_iso" {
   name_filter = "Ubuntu"
   kind        = "iso"
   status      = "Downloaded"
 }
 
-resource "isard_vm" "con_iso" {
+resource "isardvdi_vm" "con_iso" {
   name        = "desktop-con-iso"
   description = "Desktop con ISO adjunto"
   template_id = data.isard_templates.ubuntu.templates[0].id
@@ -117,7 +117,7 @@ resource "isard_vm" "con_iso" {
 ### Con Múltiples ISOs
 
 ```hcl
-resource "isard_vm" "con_multiples_isos" {
+resource "isardvdi_vm" "con_multiples_isos" {
   name        = "desktop-herramientas"
   description = "Desktop con múltiples ISOs de herramientas"
   template_id = data.isard_templates.ubuntu.templates[0].id
@@ -235,11 +235,11 @@ Terraform solo gestiona la existencia del desktop, no su estado de ejecución.
 Si usas un data source para obtener el `template_id`, Terraform gestionará automáticamente las dependencias:
 
 ```hcl
-data "isard_templates" "ubuntu" {
+data "isardvdi_templates" "ubuntu" {
   name_filter = "Ubuntu"
 }
 
-resource "isard_vm" "mi_vm" {
+resource "isardvdi_vm" "mi_vm" {
   name        = "mi-desktop"
   template_id = data.isard_templates.ubuntu.templates[0].id
   # Terraform esperará a que el data source se resuelva antes de crear
@@ -263,7 +263,7 @@ variable "entorno" {
   default = "desarrollo"
 }
 
-resource "isard_vm" "dinamico" {
+resource "isardvdi_vm" "dinamico" {
   name        = "desktop-${var.entorno}-${formatdate("YYYYMMDD", timestamp())}"
   description = "Desktop de ${var.entorno}"
   template_id = data.isard_templates.ubuntu.templates[0].id
@@ -273,7 +273,7 @@ resource "isard_vm" "dinamico" {
 ### Desktop con Lifecycle
 
 ```hcl
-resource "isard_vm" "importante" {
+resource "isardvdi_vm" "importante" {
   name        = "desktop-produccion"
   description = "Desktop crítico - no eliminar accidentalmente"
   template_id = data.isard_templates.ubuntu.templates[0].id
