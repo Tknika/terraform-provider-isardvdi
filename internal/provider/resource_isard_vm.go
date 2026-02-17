@@ -160,8 +160,8 @@ func (r *vmResource) Create(ctx context.Context, req resource.CreateRequest, res
 		memory = &m
 	}
 
-	if !plan.NetworkInterfaces.IsNull() && !plan.NetworkInterfaces.IsUnknown() {
-		diags := plan.NetworkInterfaces.ElementsAs(ctx, &interfaces, false)
+	if !plan.Interfaces.IsNull() && !plan.Interfaces.IsUnknown() {
+		diags := plan.Interfaces.ElementsAs(ctx, &interfaces, false)
 		resp.Diagnostics.Append(diags...)
 		if resp.Diagnostics.HasError() {
 			return

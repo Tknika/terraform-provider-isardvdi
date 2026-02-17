@@ -60,14 +60,14 @@ func (c *Client) CreatePersistentDesktop(name, description, templateID string, v
 	hardware := make(map[string]interface{})
 
 	// Copiar campos obligatorios del template
-	if boot_order, ok := templateHardware["boot_order"]; ok {
-		hardware["boot_order"] = boot_order
+	if bootOrder, ok := templateHardware["boot_order"]; ok {
+		hardware["boot_order"] = bootOrder
 	} else {
 		hardware["boot_order"] = []string{"disk"}
 	}
 
-	if disk_bus, ok := templateHardware["disk_bus"]; ok {
-		hardware["disk_bus"] = disk_bus
+	if diskBus, ok := templateHardware["disk_bus"]; ok {
+		hardware["disk_bus"] = diskBus
 	} else {
 		hardware["disk_bus"] = "default"
 	}
@@ -97,11 +97,11 @@ func (c *Client) CreatePersistentDesktop(name, description, templateID string, v
 	}
 
 	if memory != nil {
-		hardware["memory"] = int(*memory)
+		hardware["memory"] = *memory
 	} else if templateMemory, ok := templateHardware["memory"].(float64); ok {
-		hardware["memory"] = int(templateMemory)
+		hardware["memory"] = templateMemory
 	} else {
-		hardware["memory"] = 2
+		hardware["memory"] = 2.0
 	}
 
 	// interfaces: usar valores especificados o del template
