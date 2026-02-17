@@ -37,9 +37,10 @@ type vmResourceModel struct {
 	TemplateID         types.String  `tfsdk:"template_id"`
 	VCPUs              types.Int64   `tfsdk:"vcpus"`
 	Memory             types.Float64 `tfsdk:"memory"`
-	Interfaces         types.List    `tfsdk:"interfaces"`
+	NetworkInterfaces  types.List    `tfsdk:"network_interfaces"`
 	ISOs               types.List    `tfsdk:"isos"`
 	Floppies           types.List    `tfsdk:"floppies"`
+	Viewers            types.List    `tfsdk:"viewers"`
 	ForceStopOnDestroy types.Bool    `tfsdk:"force_stop_on_destroy"`
 }
 
@@ -83,7 +84,7 @@ func (r *vmResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *r
 				Computed:            true,
 				MarkdownDescription: "Memoria RAM en GB (por defecto usa la del template)",
 			},
-			"interfaces": schema.ListAttribute{
+			"network_interfaces": schema.ListAttribute{
 				ElementType:         types.StringType,
 				Optional:            true,
 				MarkdownDescription: "Lista de IDs de interfaces de red a utilizar (por defecto usa las del template)",
@@ -97,6 +98,11 @@ func (r *vmResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *r
 				ElementType:         types.StringType,
 				Optional:            true,
 				MarkdownDescription: "Lista de IDs de medios floppy a adjuntar al desktop",
+			},
+			"viewers": schema.ListAttribute{
+				ElementType:         types.StringType,
+				Optional:            true,
+				MarkdownDescription: "Lista de viewers habilitados (ej: ['browser_vnc', 'file_spice', 'file_rdpgw', 'browser_rdp']). Si no se especifica, se usan los del template.",
 			},
 			"force_stop_on_destroy": schema.BoolAttribute{
 				Optional:            true,
@@ -128,7 +134,7 @@ func (r *vmResource) Configure(_ context.Context, req resource.ConfigureRequest,
 	r.client = client
 }
 
-	// Create creates a new resource.
+// Create creates a new resource.
 func (r *vmResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan vmResourceModel
 	diags := req.Plan.Get(ctx, &plan)
@@ -143,25 +149,25 @@ func (r *vmResource) Create(ctx context.Context, req resource.CreateRequest, res
 	var interfaces []string
 	var isos []string
 	var floppies []string
-	
+
 	if !plan.VCPUs.IsNull() && !plan.VCPUs.IsUnknown() {
 		v := plan.VCPUs.ValueInt64()
 		vcpus = &v
 	}
-	
+
 	if !plan.Memory.IsNull() && !plan.Memory.IsUnknown() {
 		m := plan.Memory.ValueFloat64()
 		memory = &m
 	}
-	
-	if !plan.Interfaces.IsNull() && !plan.Interfaces.IsUnknown() {
-		diags := plan.Interfaces.ElementsAs(ctx, &interfaces, false)
+
+	if !plan.NetworkInterfaces.IsNull() && !plan.NetworkInterfaces.IsUnknown() {
+		diags := plan.NetworkInterfaces.ElementsAs(ctx, &interfaces, false)
 		resp.Diagnostics.Append(diags...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
 	}
-	
+
 	if !plan.ISOs.IsNull() && !plan.ISOs.IsUnknown() {
 		diags := plan.ISOs.ElementsAs(ctx, &isos, false)
 		resp.Diagnostics.Append(diags...)
@@ -169,9 +175,18 @@ func (r *vmResource) Create(ctx context.Context, req resource.CreateRequest, res
 			return
 		}
 	}
-	
+
 	if !plan.Floppies.IsNull() && !plan.Floppies.IsUnknown() {
 		diags := plan.Floppies.ElementsAs(ctx, &floppies, false)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+
+	var viewers []string
+	if !plan.Viewers.IsNull() && !plan.Viewers.IsUnknown() {
+		diags := plan.Viewers.ElementsAs(ctx, &viewers, false)
 		resp.Diagnostics.Append(diags...)
 		if resp.Diagnostics.HasError() {
 			return
@@ -188,6 +203,7 @@ func (r *vmResource) Create(ctx context.Context, req resource.CreateRequest, res
 		interfaces,
 		isos,
 		floppies,
+		viewers,
 	)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -236,7 +252,7 @@ func (r *vmResource) Read(ctx context.Context, req resource.ReadRequest, resp *r
 	state.Name = types.StringValue(desktop.Name)
 	state.Description = types.StringValue(desktop.Description)
 	state.TemplateID = types.StringValue(desktop.TemplateID)
-	
+
 	// No actualizar hardware - la API devuelve valores del template, no los configurados
 	// Mantener los valores del estado de Terraform
 
