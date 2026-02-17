@@ -9,6 +9,7 @@ Provider de Terraform para gestionar recursos en Isard VDI a través de su API v
 - ✅ **isardvdi_vm** - Creación, lectura y eliminación de desktops persistentes con soporte para:
   - Hardware personalizado (vCPUs, memoria)
   - Interfaces de red personalizadas
+  - Viewers personalizados (VNC, SPICE, RDP)
   - Medios ISO y floppy adjuntos
   - Parada forzada optimizada antes de destruir (force_stop_on_destroy con 10s timeout)
 - ✅ **isardvdi_deployment** - Gestión de deployments para crear múltiples desktops para usuarios/grupos con:
@@ -157,7 +158,7 @@ resource "isardvdi_vm" "vm_custom" {
   description = "VM con interfaces personalizadas"
   template_id = data.isardvdi_templates.ubuntu.templates[0].id
   
-  interfaces = [
+  network_interfaces = [
     "wireguard",  # Requerido para RDP
     isardvdi_network_interface.bridge_custom.id
   ]

@@ -5,6 +5,20 @@ Todos los cambios notables de este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [Unreleased]
+
+### Agregado
+- Soporte para especificar `viewers` al crear VMs persistentes (escritorios). Los viewers disponibles incluyen: `browser_vnc`, `file_spice`, `file_rdpgw`, `browser_rdp`.
+- Soporte para especificar interfaces de red personalizadas (`network_interfaces`) al crear VMs persistentes. Si no se especifica, se usan las interfaces del template.
+
+### Cambiado
+- **BREAKING CHANGE**: Campo `interfaces` renombrado a `network_interfaces` en el recurso `isardvdi_vm`
+- Mejorado el manejo de hardware personalizado (`vcpus` y `memory`) en la creación de VMs. Ahora se copian correctamente los valores del template y se pueden sobrescribir con valores personalizados.
+
+### Arreglado
+- Corrección en la creación de VMs persistentes para incluir todos los campos de hardware requeridos del template
+- Corrección en el manejo de campos `vcpus` y `memory` para que se puedan personalizar correctamente al crear VMs
+
 ## [0.2.1] - 2026-02-12
 
 ### Cambiado
