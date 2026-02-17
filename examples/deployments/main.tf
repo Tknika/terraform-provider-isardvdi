@@ -32,8 +32,11 @@ resource "isardvdi_deployment" "group_deployment" {
   desktop_name = "Desktop DevOps"
   visible      = false
 
-  allowed {
-    groups = ["devops-group-uuid"]
+  allowed = {
+    roles      = []
+    categories = []
+    groups     = ["devops-group-uuid"]
+    users      = []
   }
 }
 
@@ -48,8 +51,11 @@ resource "isardvdi_deployment" "performance_deployment" {
   vcpus      = 4
   memory     = 16.0
 
-  allowed {
-    groups = ["performance-group-uuid"]
+  allowed = {
+    roles      = []
+    categories = []
+    groups     = ["performance-group-uuid"]
+    users      = []
   }
 }
 
@@ -64,7 +70,10 @@ resource "isardvdi_deployment" "user_deployment" {
   vcpus  = 2
   memory = 8.0
 
-  allowed {
+  allowed = {
+    roles      = []
+    categories = []
+    groups     = []
     users = [
       "user-uuid-1",
       "user-uuid-2",
@@ -83,8 +92,11 @@ resource "isardvdi_deployment" "category_deployment" {
   desktop_name = "Desktop Estudiante"
   visible      = true
 
-  allowed {
+  allowed = {
+    roles      = []
     categories = ["students-category-uuid"]
+    groups     = []
+    users      = []
   }
 }
 
@@ -103,8 +115,11 @@ resource "isardvdi_deployment" "network_deployment" {
     "interface-uuid-2"
   ]
 
-  allowed {
-    groups = ["network-admin-group-uuid"]
+  allowed = {
+    roles      = []
+    categories = []
+    groups     = ["network-admin-group-uuid"]
+    users      = []
   }
 }
 
@@ -116,12 +131,15 @@ resource "isardvdi_deployment" "multi_group_deployment" {
   desktop_name = "Desktop Compartido"
   visible      = true
 
-  allowed {
+  allowed = {
+    roles      = []
+    categories = []
     groups = [
       "group-uuid-1",
       "group-uuid-2",
       "group-uuid-3"
     ]
+    users      = []
   }
 }
 
@@ -136,8 +154,11 @@ resource "isardvdi_deployment" "web_viewers_deployment" {
   # Solo viewers web, sin necesidad de instalar clientes
   viewers = ["browser_vnc", "browser_rdp"]
 
-  allowed {
-    groups = ["remote-workers-uuid"]
+  allowed = {
+    roles      = []
+    categories = []
+    groups     = ["remote-workers-uuid"]
+    users      = []
   }
 }
 
@@ -155,8 +176,11 @@ resource "isardvdi_deployment" "spice_deployment" {
   # Solo SPICE para máximo rendimiento
   viewers = ["file_spice"]
 
-  allowed {
-    groups = ["design-team-uuid"]
+  allowed = {
+    roles      = []
+    categories = []
+    groups     = ["design-team-uuid"]
+    users      = []
   }
 }
 
@@ -177,8 +201,11 @@ resource "isardvdi_deployment" "full_access_deployment" {
     "file_spice"
   ]
 
-  allowed {
-    users = ["admin-user-uuid"]
+  allowed = {
+    roles      = []
+    categories = []
+    groups     = []
+    users      = ["admin-user-uuid"]
   }
 }
 
