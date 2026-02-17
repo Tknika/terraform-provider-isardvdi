@@ -37,7 +37,7 @@ type vmResourceModel struct {
 	TemplateID         types.String  `tfsdk:"template_id"`
 	VCPUs              types.Int64   `tfsdk:"vcpus"`
 	Memory             types.Float64 `tfsdk:"memory"`
-	Interfaces         types.List    `tfsdk:"interfaces"`
+	NetworkInterfaces  types.List    `tfsdk:"network_interfaces"`
 	ISOs               types.List    `tfsdk:"isos"`
 	Floppies           types.List    `tfsdk:"floppies"`
 	Viewers            types.List    `tfsdk:"viewers"`
@@ -84,7 +84,7 @@ func (r *vmResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *r
 				Computed:            true,
 				MarkdownDescription: "Memoria RAM en GB (por defecto usa la del template)",
 			},
-			"interfaces": schema.ListAttribute{
+			"network_interfaces": schema.ListAttribute{
 				ElementType:         types.StringType,
 				Optional:            true,
 				MarkdownDescription: "Lista de IDs de interfaces de red a utilizar (por defecto usa las del template)",
