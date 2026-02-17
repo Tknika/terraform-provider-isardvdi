@@ -72,9 +72,26 @@ resource "isardvdi_vm" "con_red" {
   template_id = data.isard_templates.ubuntu.templates[0].id
   
   # Importante: Si el template tiene RDP viewers, incluir wireguard
-  interfaces = [
+  network_interfaces = [
     "wireguard",
     data.isard_network_interfaces.all.interfaces[0].id
+  ]
+}
+```
+
+### Con Viewers Personalizados
+
+```hcl
+resource "isardvdi_vm" "con_viewers" {
+  name        = "desktop-con-viewers"
+  description = "Desktop con viewers específicos"
+  template_id = data.isard_templates.ubuntu.templates[0].id
+  
+  # Especificar qué viewers estarán disponibles
+  viewers = [
+    "browser_vnc",
+    "file_spice",
+    "browser_rdp"
   ]
 }
 ```
@@ -148,9 +165,10 @@ Los siguientes argumentos son soportados:
 - `description` - (Opcional) Descripción del desktop.
 - `vcpus` - (Opcional) Número de CPUs virtuales. Si no se especifica, usa el valor del template.
 - `memory` - (Opcional) Memoria RAM en GB. Si no se especifica, usa el valor del template.
-- `interfaces` - (Opcional) Lista de IDs de interfaces de red a usar. Si no se especifica, usa las interfaces del template.
+- `network_interfaces` - (Opcional) Lista de IDs de interfaces de red a usar. Si no se especifica, usa las interfaces del template.
 - `isos` - (Opcional) Lista de IDs de medios ISO a adjuntar al desktop. Estos aparecerán como unidades de CD/DVD en la VM.
 - `floppies` - (Opcional) Lista de IDs de medios floppy a adjuntar al desktop. Raramente usado en VMs modernas.
+- `viewers` - (Opcional) Lista de viewers habilitados para acceder al desktop. Los valores posibles incluyen: `browser_vnc`, `file_spice`, `file_rdpgw`, `browser_rdp`. Si no se especifica, se usan los viewers del template.
 - `force_stop_on_destroy` - (Opcional) Si es `true`, fuerza la parada de la máquina virtual antes de eliminarla usando el endpoint de administración (parada forzada) y espera hasta 10 segundos. Por defecto: `false`. La parada forzada garantiza que la VM se detenga inmediatamente, incluso si no responde, previniendo largos tiempos de espera durante la destrucción.
 
 ## Atributos Exportados
@@ -215,10 +233,19 @@ La parada forzada utiliza el endpoint `/api/v3/admin/multiple_actions` que cambi
 
 ### Hardware Personalizado
 
-Actualmente, Isard VDI no permite especificar valores personalizados de `vcpus` y `memory` al crear desktops. Los valores se determinan por:
-- Configuración del template base
+Puedes especificar valores personalizados de `vcpus` y `memory` al crear desktops. Si no se especifican, se usan los valores del template base. Los valores finales también pueden estar limitados por:
 - Cuotas del usuario/grupo
 - Políticas del sistema
+
+### Viewers
+
+Los viewers determinan qué métodos de acceso remoto están disponibles para el desktop:
+- `browser_vnc` - VNC a través del navegador web
+- `file_spice` - Cliente SPICE nativo (archivo .vv)
+- `file_rdpgw` - RDP a través de gateway (archivo .rdp)
+- `browser_rdp` - RDP a través del navegador web
+
+Si usas viewers RDP (`file_rdpgw` o `browser_rdp`), es recomendable incluir la interfaz `wireguard` en `network_interfaces`.
 
 ### Estados del Desktop
 
@@ -250,8 +277,6 @@ resource "isardvdi_vm" "mi_vm" {
 
 1. No se puede actualizar un desktop existente (solo crear/eliminar)
 2. No se puede controlar el estado de ejecución del desktop
-3. No se pueden personalizar valores de hardware en la creación
-4. No se puede especificar hardware adicional (discos, interfaces de red, etc.)
 
 ## Ejemplos Adicionales
 
