@@ -37,7 +37,7 @@ type vmResourceModel struct {
 	TemplateID         types.String  `tfsdk:"template_id"`
 	VCPUs              types.Int64   `tfsdk:"vcpus"`
 	Memory             types.Float64 `tfsdk:"memory"`
-	NetworkInterfaces  types.List    `tfsdk:"network_interfaces"`
+	Interfaces         types.List    `tfsdk:"interfaces"`
 	ISOs               types.List    `tfsdk:"isos"`
 	Floppies           types.List    `tfsdk:"floppies"`
 	Viewers            types.List    `tfsdk:"viewers"`
@@ -84,7 +84,7 @@ func (r *vmResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *r
 				Computed:            true,
 				MarkdownDescription: "Memoria RAM en GB (por defecto usa la del template)",
 			},
-			"network_interfaces": schema.ListAttribute{
+			"interfaces": schema.ListAttribute{
 				ElementType:         types.StringType,
 				Optional:            true,
 				MarkdownDescription: "Lista de IDs de interfaces de red a utilizar (por defecto usa las del template)",
@@ -160,8 +160,8 @@ func (r *vmResource) Create(ctx context.Context, req resource.CreateRequest, res
 		memory = &m
 	}
 
-	if !plan.NetworkInterfaces.IsNull() && !plan.NetworkInterfaces.IsUnknown() {
-		diags := plan.NetworkInterfaces.ElementsAs(ctx, &interfaces, false)
+	if !plan.Interfaces.IsNull() && !plan.Interfaces.IsUnknown() {
+		diags := plan.Interfaces.ElementsAs(ctx, &interfaces, false)
 		resp.Diagnostics.Append(diags...)
 		if resp.Diagnostics.HasError() {
 			return
