@@ -7,6 +7,8 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-02-17
+
 ### Agregado
 - Soporte para especificar `viewers` al crear VMs persistentes (escritorios). Los viewers disponibles incluyen: `browser_vnc`, `file_spice`, `file_rdpgw`, `browser_rdp`.
 - Soporte para especificar interfaces de red personalizadas (`network_interfaces`) al crear VMs persistentes. Si no se especifica, se usan las interfaces del template.
