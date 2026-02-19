@@ -45,7 +45,7 @@ type deploymentResourceModel struct {
 	Allowed            types.Object `tfsdk:"allowed"`
 	VCPUs              types.Int64  `tfsdk:"vcpus"`
 	Memory             types.Float64 `tfsdk:"memory"`
-	Interfaces         types.List   `tfsdk:"interfaces"`
+	NetworkInterfaces  types.List   `tfsdk:"network_interfaces"`
 	ISOs               types.List   `tfsdk:"isos"`
 	Floppies           types.List   `tfsdk:"floppies"`
 	UserPermissions    types.List   `tfsdk:"user_permissions"`
@@ -134,7 +134,7 @@ func (r *deploymentResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Default:             float64default.StaticFloat64(2.0),
 				MarkdownDescription: "Memoria RAM en GB para los desktops (por defecto: 2.0 GB)",
 			},
-			"interfaces": schema.ListAttribute{
+			"network_interfaces": schema.ListAttribute{
 				ElementType:         types.StringType,
 				Optional:            true,
 				Computed:            true,
@@ -289,8 +289,8 @@ func (r *deploymentResource) Create(ctx context.Context, req resource.CreateRequ
 		memory = &m
 	}
 	
-	if !plan.Interfaces.IsNull() && !plan.Interfaces.IsUnknown() {
-		diags := plan.Interfaces.ElementsAs(ctx, &interfaces, false)
+	if !plan.NetworkInterfaces.IsNull() && !plan.NetworkInterfaces.IsUnknown() {
+		diags := plan.NetworkInterfaces.ElementsAs(ctx, &interfaces, false)
 		resp.Diagnostics.Append(diags...)
 		if resp.Diagnostics.HasError() {
 			return
@@ -378,7 +378,7 @@ func (r *deploymentResource) Create(ctx context.Context, req resource.CreateRequ
 		plan.Visible = types.BoolValue(deployment.Visible)
 	}
 
-	// Los valores de hardware (vcpus, memory, interfaces) ya están en el plan
+	// Los valores de hardware (vcpus, memory, network_interfaces) ya están en el plan
 	// por los defaults del schema o por los valores especificados por el usuario
 	// No necesitamos leerlos de la API en Create ya que los enviamos nosotros
 
@@ -481,7 +481,7 @@ func (r *deploymentResource) Read(ctx context.Context, req resource.ReadRequest,
 	}
 
 	// Nota: La API devuelve null para hardware en deployments
-	// Los valores de vcpus, memory e interfaces se mantienen del state
+	// Los valores de vcpus, memory y network_interfaces se mantienen del state
 	// ya que son los que se enviaron en la creación
 
 	diags = resp.State.Set(ctx, &state)
@@ -572,7 +572,7 @@ func (r *deploymentResource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 
 	// Actualizar hardware si se especifica
-	if !plan.VCPUs.IsNull() || !plan.Memory.IsNull() || !plan.Interfaces.IsNull() {
+	if !plan.VCPUs.IsNull() || !plan.Memory.IsNull() || !plan.NetworkInterfaces.IsNull() {
 		hardware := make(map[string]interface{})
 		
 		if !plan.VCPUs.IsNull() && !plan.VCPUs.IsUnknown() {
@@ -583,9 +583,9 @@ func (r *deploymentResource) Update(ctx context.Context, req resource.UpdateRequ
 			hardware["memory"] = plan.Memory.ValueFloat64()
 		}
 		
-		if !plan.Interfaces.IsNull() && !plan.Interfaces.IsUnknown() {
+		if !plan.NetworkInterfaces.IsNull() && !plan.NetworkInterfaces.IsUnknown() {
 			var interfaces []string
-			diags := plan.Interfaces.ElementsAs(ctx, &interfaces, false)
+			diags := plan.NetworkInterfaces.ElementsAs(ctx, &interfaces, false)
 			resp.Diagnostics.Append(diags...)
 			if !resp.Diagnostics.HasError() && len(interfaces) > 0 {
 				interfacesList := make([]map[string]interface{}, len(interfaces))

@@ -21,159 +21,58 @@ type Desktop struct {
 
 // HardwareSpec especifica el hardware personalizado para un desktop
 type HardwareSpec struct {
-	VCPUs      *int64                   `json:"vcpus,omitempty"`
-	Memory     *float64                 `json:"memory,omitempty"`
-	DiskBus    string                   `json:"disk_bus,omitempty"`
-	BootOrder  []string                 `json:"boot_order,omitempty"`
-	Graphics   []string                 `json:"graphics,omitempty"`
-	Videos     []string                 `json:"videos,omitempty"`
-	Interfaces []string                 `json:"interfaces,omitempty"`
+	VCPUs      *int64   `json:"vcpus,omitempty"`
+	Memory     *float64 `json:"memory,omitempty"`
+	DiskBus    string   `json:"disk_bus,omitempty"`
+	BootOrder  []string `json:"boot_order,omitempty"`
+	Graphics   []string `json:"graphics,omitempty"`
+	Videos     []string `json:"videos,omitempty"`
+	Interfaces []string `json:"interfaces,omitempty"`
 	ISOs       []map[string]interface{} `json:"isos,omitempty"`
 	Floppies   []map[string]interface{} `json:"floppies,omitempty"`
 }
 
 // CreatePersistentDesktop crea un nuevo persistent desktop
-func (c *Client) CreatePersistentDesktop(name, description, templateID string, vcpus *int64, memory *float64, interfaces []string, isos []string, floppies []string, viewers []string) (string, error) {
+func (c *Client) CreatePersistentDesktop(name, description, templateID string, vcpus *int64, memory *float64, interfaces []string, isos []string, floppies []string) (string, error) {
 	reqURL := fmt.Sprintf("https://%s/api/v3/persistent_desktop", c.HostURL)
 
-	// Obtener información del template para construir payload completo
-	template, err := c.GetTemplateInfo(templateID)
-	if err != nil {
-		return "", fmt.Errorf("error obteniendo información del template: %w", err)
-	}
-
-	templateHardware, _ := template["hardware"].(map[string]interface{})
-	templateGuestProps, _ := template["guest_properties"].(map[string]interface{})
-	templateImage, _ := template["image"].(map[string]interface{})
-
-	// Construir el payload básico
+	// Construir el payload
 	payload := map[string]interface{}{
 		"name":        name,
 		"template_id": templateID,
 	}
-
+	
 	if description != "" {
 		payload["description"] = description
 	}
 
-	// Construir hardware desde el template
-	hardware := make(map[string]interface{})
-
-	// Copiar campos obligatorios del template
-	if bootOrder, ok := templateHardware["boot_order"]; ok {
-		hardware["boot_order"] = bootOrder
-	} else {
-		hardware["boot_order"] = []string{"disk"}
-	}
-
-	if diskBus, ok := templateHardware["disk_bus"]; ok {
-		hardware["disk_bus"] = diskBus
-	} else {
-		hardware["disk_bus"] = "default"
-	}
-
-	if disks, ok := templateHardware["disks"]; ok {
-		hardware["disks"] = disks
-	} else {
-		hardware["disks"] = []interface{}{}
-	}
-
-	// videos - siempre del template (son tarjetas de video, NO viewers)
-	if videos, ok := templateHardware["videos"]; ok {
-		hardware["videos"] = videos
-	} else if video, ok := templateHardware["video"]; ok {
-		hardware["videos"] = video
-	} else {
-		hardware["videos"] = []string{"default"}
-	}
-
-	// vcpus y memory: usar valores especificados o del template
-	if vcpus != nil {
-		hardware["vcpus"] = int(*vcpus)
-	} else if templateVCPUs, ok := templateHardware["vcpus"].(float64); ok {
-		hardware["vcpus"] = int(templateVCPUs)
-	} else {
-		hardware["vcpus"] = 2
-	}
-
-	if memory != nil {
-		hardware["memory"] = *memory
-	} else if templateMemory, ok := templateHardware["memory"].(float64); ok {
-		hardware["memory"] = templateMemory
-	} else {
-		hardware["memory"] = 2.0
-	}
-
-	// interfaces: usar valores especificados o del template
-	if len(interfaces) > 0 {
-		hardware["interfaces"] = interfaces
-	} else if templateInterfaces, ok := templateHardware["interfaces"]; ok {
-		hardware["interfaces"] = templateInterfaces
-	} else {
-		hardware["interfaces"] = []string{"default"}
-	}
-
-	// ISOs: usar valores especificados o del template
-	if len(isos) > 0 {
-		isoList := make([]map[string]interface{}, len(isos))
-		for i, isoID := range isos {
-			isoList[i] = map[string]interface{}{"id": isoID}
+	// Agregar hardware personalizado si se especifica
+	if vcpus != nil || memory != nil || len(interfaces) > 0 || len(isos) > 0 || len(floppies) > 0 {
+		hardware := make(map[string]interface{})
+		if vcpus != nil {
+			hardware["vcpus"] = *vcpus
 		}
-		hardware["isos"] = isoList
-	} else if templateISOs, ok := templateHardware["isos"]; ok {
-		hardware["isos"] = templateISOs
-	} else {
-		hardware["isos"] = []interface{}{}
-	}
-
-	// Floppies: usar valores especificados o del template
-	if len(floppies) > 0 {
-		floppyList := make([]map[string]interface{}, len(floppies))
-		for i, floppyID := range floppies {
-			floppyList[i] = map[string]interface{}{"id": floppyID}
+		if memory != nil {
+			hardware["memory"] = *memory
 		}
-		hardware["floppies"] = floppyList
-	} else if templateFloppies, ok := templateHardware["floppies"]; ok {
-		hardware["floppies"] = templateFloppies
-	} else {
-		hardware["floppies"] = []interface{}{}
-	}
-
-	// reservables: siempre incluir
-	if reservables, ok := templateHardware["reservables"]; ok {
-		hardware["reservables"] = reservables
-	} else {
-		hardware["reservables"] = map[string]interface{}{"vgpus": []string{"None"}}
-	}
-
-	payload["hardware"] = hardware
-
-	// guest_properties: construir desde el template y sobrescribir viewers si se especifica
-	guestProps := make(map[string]interface{})
-
-	// Copiar del template
-	if templateGuestProps != nil {
-		for k, v := range templateGuestProps {
-			guestProps[k] = v
+		if len(interfaces) > 0 {
+			hardware["interfaces"] = interfaces
 		}
-	}
-
-	// Si se especifican viewers personalizados, sobrescribir
-	if len(viewers) > 0 {
-		viewersMap := make(map[string]interface{})
-		for _, viewer := range viewers {
-			viewersMap[viewer] = map[string]interface{}{"options": nil}
+		if len(isos) > 0 {
+			isoList := make([]map[string]interface{}, len(isos))
+			for i, isoID := range isos {
+				isoList[i] = map[string]interface{}{"id": isoID}
+			}
+			hardware["isos"] = isoList
 		}
-		guestProps["viewers"] = viewersMap
-	}
-
-	payload["guest_properties"] = guestProps
-
-	// image: usar del template
-	if templateImage != nil {
-		payload["image"] = templateImage
-	} else {
-		payload["image"] = map[string]interface{}{"type": "user"}
+		if len(floppies) > 0 {
+			floppyList := make([]map[string]interface{}, len(floppies))
+			for i, floppyID := range floppies {
+				floppyList[i] = map[string]interface{}{"id": floppyID}
+			}
+			hardware["floppies"] = floppyList
+		}
+		payload["hardware"] = hardware
 	}
 
 	jsonData, err := json.Marshal(payload)
@@ -270,7 +169,7 @@ func (c *Client) GetDesktop(desktopID string) (*Desktop, error) {
 			desktop.TemplateID = origin
 		}
 	}
-
+	
 	// Leer el hardware
 	if hardware, ok := response["hardware"].(map[string]interface{}); ok {
 		if vcpus, ok := hardware["vcpus"].(float64); ok {
@@ -396,18 +295,18 @@ func (c *Client) WaitForDesktopStopped(desktopID string, maxWaitSeconds int) err
 	if err != nil {
 		return fmt.Errorf("error obteniendo estado del desktop: %w", err)
 	}
-
+	
 	// Estados que indican que el desktop está detenido
 	if status == "Stopped" || status == "stopped" || status == "Shutdown" || status == "shutdown" || status == "Failed" || status == "failed" {
 		return nil
 	}
-
+	
 	// Si no está detenido, esperar con polling
 	ticker := time.NewTicker(2 * time.Second)
 	defer ticker.Stop()
-
+	
 	timeout := time.After(time.Duration(maxWaitSeconds) * time.Second)
-
+	
 	for {
 		select {
 		case <-timeout:
@@ -417,7 +316,7 @@ func (c *Client) WaitForDesktopStopped(desktopID string, maxWaitSeconds int) err
 			if err != nil {
 				return fmt.Errorf("error obteniendo estado del desktop: %w", err)
 			}
-
+			
 			// Estados que indican que el desktop está detenido
 			if status == "Stopped" || status == "stopped" || status == "Shutdown" || status == "shutdown" || status == "Failed" || status == "failed" {
 				return nil

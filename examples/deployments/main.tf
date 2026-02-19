@@ -110,7 +110,7 @@ resource "isardvdi_deployment" "network_deployment" {
   vcpus  = 2
   memory = 4.0
   
-  interfaces = [
+  network_interfaces = [
     "interface-uuid-1",
     "interface-uuid-2"
   ]

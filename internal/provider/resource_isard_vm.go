@@ -203,7 +203,6 @@ func (r *vmResource) Create(ctx context.Context, req resource.CreateRequest, res
 		interfaces,
 		isos,
 		floppies,
-		viewers,
 	)
 	if err != nil {
 		resp.Diagnostics.AddError(

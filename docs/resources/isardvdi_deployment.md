@@ -35,7 +35,7 @@ resource "isardvdi_deployment" "custom_hardware" {
   
   vcpus      = 4
   memory     = 8.0
-  interfaces = ["interface-uuid-1"]
+  network_interfaces = ["interface-uuid-1"]
 
   allowed {
     users = ["user-uuid-1", "user-uuid-2"]
@@ -64,7 +64,7 @@ resource "isardvdi_deployment" "network_deployment" {
   template_id  = "template-uuid-abc"
   desktop_name = "Desktop Network"
   
-  interfaces = [
+  network_interfaces = [
     "interface-uuid-1",
     "interface-uuid-2",
     "interface-uuid-3"
@@ -190,7 +190,7 @@ resource "isardvdi_deployment" "all_viewers" {
 - `visible` (Boolean) Si los desktops del deployment son visibles para los usuarios. Por defecto: `false`.
 - `vcpus` (Number) Número de CPUs virtuales para los desktops. Si no se especifica, usa el valor del template.
 - `memory` (Number) Memoria RAM en GB para los desktops. Si no se especifica, usa el valor del template.
-- `interfaces` (List of String) Lista de IDs de interfaces de red a utilizar. Si no se especifica, usa las del template.
+- `network_interfaces` (List of String) Lista de IDs de interfaces de red a utilizar. Si no se especifica, usa las del template.
 - `isos` (List of String) Lista de IDs de medios ISO a adjuntar a los desktops del deployment. Estos aparecerán como unidades de CD/DVD en cada VM creada.
 - `floppies` (List of String) Lista de IDs de medios floppy a adjuntar a los desktops del deployment. Raramente usado en VMs modernas.
 - `viewers` (List of String) Lista de viewers habilitados para los desktops. Si no se especifica, usa los viewers del template. Valores disponibles:
@@ -263,7 +263,7 @@ terraform import isard_deployment.example deployment-uuid-123
 ## Notas Adicionales
 
 - **Desktops Automáticos:** Al crear un deployment, Isard VDI creará automáticamente un desktop para cada usuario que coincida con los criterios especificados en `allowed`.
-- **Hardware:** Si especificas `vcpus`, `memory` o `interfaces`, estos valores sobrescriben los del template para todos los desktops del deployment.
+- **Hardware:** Si especificas `vcpus`, `memory` o `network_interfaces`, estos valores sobrescriben los del template para todos los desktops del deployment.
 - **Visibilidad:** El atributo `visible` controla si los desktops son visibles inmediatamente para los usuarios o si están ocultos hasta que sean habilitados.
 - **Eliminación:** Al eliminar un deployment, todos los desktops asociados también serán eliminados permanentemente.
 - **Manejo Automático de VMs en Ejecución:** Si al intentar eliminar un deployment las VMs están en ejecución (error 428), el proveedor automáticamente:
