@@ -141,11 +141,11 @@ resource "isardvdi_network_interface" "custom_bridge" {
 resource "isardvdi_vm" "con_interfaz" {
   name        = "vm-con-interfaz-custom"
   description = "VM con interfaz personalizada"
-  template_id = data.isard_templates.ubuntu.templates[0].id
+  template_id = data.isardvdi_templates.ubuntu.templates[0].id
   
   interfaces = [
     "wireguard",  # Requerido para RDP viewers
-    isard_network_interface.custom_bridge.id
+    isardvdi_network_interface.custom_bridge.id
   ]
 }
 ```
@@ -191,7 +191,7 @@ Los mismos que los argumentos, ya que todos son configurables y computed.
 Las interfaces de red pueden ser importadas usando su ID:
 
 ```bash
-terraform import isard_network_interface.bridge_dev bridge-desarrollo
+terraform import isardvdi_network_interface.bridge_dev bridge-desarrollo
 ```
 
 ## Ciclo de Vida
@@ -309,7 +309,7 @@ Asigna rangos de VLANs para uso personal de usuarios/grupos.
 
 ## Data Source Relacionado
 
-Use el data source `isard_network_interfaces` para buscar interfaces existentes:
+Use el data source `isardvdi_network_interfaces` para buscar interfaces existentes:
 
 ```hcl
 data "isardvdi_network_interfaces" "bridges" {
@@ -319,6 +319,6 @@ data "isardvdi_network_interfaces" "bridges" {
 }
 
 output "bridge_list" {
-  value = data.isard_network_interfaces.bridges.interfaces
+  value = data.isardvdi_network_interfaces.bridges.interfaces
 }
 ```

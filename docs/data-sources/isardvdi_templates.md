@@ -17,7 +17,7 @@ Obtiene la lista de templates disponibles para el usuario autenticado en Isard V
 data "isardvdi_templates" "todos" {}
 
 output "lista_completa" {
-  value = data.isard_templates.todos.templates
+  value = data.isardvdi_templates.todos.templates
 }
 ```
 
@@ -29,7 +29,7 @@ data "isardvdi_templates" "ubuntu" {
 }
 
 output "templates_ubuntu" {
-  value = data.isard_templates.ubuntu.templates
+  value = data.isardvdi_templates.ubuntu.templates
 }
 ```
 
@@ -43,7 +43,7 @@ data "isardvdi_templates" "ubuntu" {
 resource "isardvdi_vm" "mi_desktop" {
   name        = "desktop-desde-datasource"
   description = "Usa el primer template Ubuntu encontrado"
-  template_id = data.isard_templates.ubuntu.templates[0].id
+  template_id = data.isardvdi_templates.ubuntu.templates[0].id
 }
 ```
 
@@ -73,8 +73,8 @@ data "isardvdi_templates" "windows" {
 
 # Fallar si no hay templates
 locals {
-  template_count = length(data.isard_templates.windows.templates)
-  template_id    = local.template_count > 0 ? data.isard_templates.windows.templates[0].id : null
+  template_count = length(data.isardvdi_templates.windows.templates)
+  template_id    = local.template_count > 0 ? data.isardvdi_templates.windows.templates[0].id : null
 }
 
 resource "isardvdi_vm" "windows_desktop" {
@@ -158,7 +158,7 @@ data "isardvdi_templates" "ubuntu" {
 locals {
   # Buscar un template específico por nombre exacto
   ubuntu_22_template = [
-    for t in data.isard_templates.ubuntu.templates : t
+    for t in data.isardvdi_templates.ubuntu.templates : t
     if t.name == "Ubuntu Desktop 22.04"
   ][0]
 }
@@ -176,7 +176,7 @@ data "isardvdi_templates" "todos" {}
 
 output "templates_info" {
   value = {
-    for template in data.isard_templates.todos.templates :
+    for template in data.isardvdi_templates.todos.templates :
     template.name => {
       id          = template.id
       description = template.description
@@ -197,7 +197,7 @@ data "isardvdi_templates" "desarrollo" {
 
 resource "isardvdi_vm" "dev_desktops" {
   for_each = { 
-    for idx, tmpl in data.isard_templates.desarrollo.templates : 
+    for idx, tmpl in data.isardvdi_templates.desarrollo.templates : 
     idx => tmpl 
   }
   
@@ -216,7 +216,7 @@ data "isardvdi_templates" "ubuntu" {
 
 # Validar que al menos un template fue encontrado
 resource "null_resource" "validacion" {
-  count = length(data.isard_templates.ubuntu.templates) == 0 ? 1 : 0
+  count = length(data.isardvdi_templates.ubuntu.templates) == 0 ? 1 : 0
   
   provisioner "local-exec" {
     command = "echo 'ERROR: No se encontraron templates Ubuntu' && exit 1"
@@ -235,7 +235,7 @@ resource "null_resource" "validacion" {
 ```hcl
 locals {
   templates_habilitados = [
-    for t in data.isard_templates.todos.templates : t
+    for t in data.isardvdi_templates.todos.templates : t
     if t.enabled
   ]
 }

@@ -83,13 +83,13 @@ data "isardvdi_medias" "ubuntu" {
 
 # Mostrar todos los IDs
 output "ubuntu_iso_ids" {
-  value = data.isard_medias.ubuntu.medias[*].id
+  value = data.isardvdi_medias.ubuntu.medias[*].id
 }
 
 # Mostrar nombres y estados
 output "ubuntu_isos_status" {
   value = [
-    for media in data.isard_medias.ubuntu.medias : {
+    for media in data.isardvdi_medias.ubuntu.medias : {
       name   = media.name
       status = media.status
       id     = media.id
@@ -113,7 +113,7 @@ data "isardvdi_medias" "virtio_drivers" {
 resource "isardvdi_vm" "windows_vm" {
   name        = "Windows VM"
   template_id = "template-id"
-  # En futuras versiones: media_ids = [data.isard_medias.virtio_drivers.medias[0].id]
+  # En futuras versiones: media_ids = [data.isardvdi_medias.virtio_drivers.medias[0].id]
 }
 ```
 

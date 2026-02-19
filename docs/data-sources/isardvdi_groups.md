@@ -17,7 +17,7 @@ Obtiene la lista de grupos disponibles en Isard VDI. Este data source es útil p
 data "isardvdi_groups" "todos" {}
 
 output "lista_completa" {
-  value = data.isard_groups.todos.groups
+  value = data.isardvdi_groups.todos.groups
 }
 ```
 
@@ -29,7 +29,7 @@ data "isardvdi_groups" "wag_p" {
 }
 
 output "grupo_wag_p" {
-  value = data.isard_groups.wag_p.groups
+  value = data.isardvdi_groups.wag_p.groups
 }
 ```
 
@@ -47,11 +47,11 @@ data "isardvdi_templates" "ubuntu" {
 resource "isardvdi_deployment" "deploy_desarrollo" {
   name         = "Deployment para Desarrollo"
   description  = "Desktops para el equipo de desarrollo"
-  template_id  = data.isard_templates.ubuntu.templates[0].id
+  template_id  = data.isardvdi_templates.ubuntu.templates[0].id
   desktop_name = "Desktop-Dev"
   
   allowed {
-    groups = [data.isard_groups.desarrollo.groups[0].id]
+    groups = [data.isardvdi_groups.desarrollo.groups[0].id]
   }
 }
 ```
@@ -81,7 +81,7 @@ data "isardvdi_groups" "grupos_default" {
 }
 
 output "grupos_categoria_default" {
-  value = data.isard_groups.grupos_default.groups
+  value = data.isardvdi_groups.grupos_default.groups
 }
 ```
 
@@ -95,7 +95,7 @@ data "isardvdi_groups" "dev_default" {
 }
 
 output "grupos_dev" {
-  value = data.isard_groups.dev_default.groups
+  value = data.isardvdi_groups.dev_default.groups
 }
 ```
 
@@ -108,8 +108,8 @@ data "isardvdi_groups" "produccion" {
 
 # Fallar si no hay grupos
 locals {
-  group_count = length(data.isard_groups.produccion.groups)
-  group_id    = local.group_count > 0 ? data.isard_groups.produccion.groups[0].id : null
+  group_count = length(data.isardvdi_groups.produccion.groups)
+  group_id    = local.group_count > 0 ? data.isardvdi_groups.produccion.groups[0].id : null
 }
 
 resource "isardvdi_deployment" "prod_deploy" {
@@ -202,7 +202,7 @@ data "isardvdi_groups" "busqueda" {
 locals {
   # Buscar un grupo específico por nombre exacto
   wag_p_group = [
-    for g in data.isard_groups.busqueda.groups : g
+    for g in data.isardvdi_groups.busqueda.groups : g
     if g.name == "WAG-P"
   ][0]
 }
@@ -225,7 +225,7 @@ data "isardvdi_groups" "todos" {}
 
 output "grupos_info" {
   value = {
-    for group in data.isard_groups.todos.groups :
+    for group in data.isardvdi_groups.todos.groups :
     group.name => {
       id          = group.id
       description = group.description
@@ -248,13 +248,13 @@ data "isardvdi_templates" "ubuntu" {
 
 resource "isardvdi_deployment" "multi_equipo" {
   for_each = { 
-    for idx, grp in data.isard_groups.equipos.groups : 
+    for idx, grp in data.isardvdi_groups.equipos.groups : 
     grp.name => grp 
   }
   
   name         = "Deployment-${each.key}"
   description  = "Desktops para ${each.key}"
-  template_id  = data.isard_templates.ubuntu.templates[0].id
+  template_id  = data.isardvdi_templates.ubuntu.templates[0].id
   desktop_name = "Desktop-${each.key}"
   
   allowed {
@@ -284,8 +284,8 @@ resource "isardvdi_network_interface" "shared_network" {
   
   allowed {
     groups = concat(
-      [for g in data.isard_groups.admin.groups : g.id],
-      [for g in data.isard_groups.users.groups : g.id]
+      [for g in data.isardvdi_groups.admin.groups : g.id],
+      [for g in data.isardvdi_groups.users.groups : g.id]
     )
   }
 }

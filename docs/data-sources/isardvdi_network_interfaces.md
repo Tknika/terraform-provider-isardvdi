@@ -17,7 +17,7 @@ Obtiene la lista de interfaces de red del sistema disponibles en Isard VDI. **Re
 data "isardvdi_network_interfaces" "all" {}
 
 output "todas_las_interfaces" {
-  value = data.isard_network_interfaces.all.interfaces
+  value = data.isardvdi_network_interfaces.all.interfaces
 }
 ```
 
@@ -31,7 +31,7 @@ data "isardvdi_network_interfaces" "bridges" {
 }
 
 output "interfaces_bridge" {
-  value = data.isard_network_interfaces.bridges.interfaces
+  value = data.isardvdi_network_interfaces.bridges.interfaces
 }
 ```
 
@@ -47,10 +47,10 @@ data "isardvdi_network_interfaces" "wireguard" {
 # Usar en una VM
 resource "isardvdi_vm" "con_vpn" {
   name        = "vm-con-vpn"
-  template_id = data.isard_templates.ubuntu.templates[0].id
+  template_id = data.isardvdi_templates.ubuntu.templates[0].id
   
   interfaces = [
-    data.isard_network_interfaces.wireguard.interfaces[0].id
+    data.isardvdi_network_interfaces.wireguard.interfaces[0].id
   ]
 }
 ```
@@ -65,7 +65,7 @@ data "isardvdi_network_interfaces" "public_bridge" {
 }
 
 output "interfaces_publicas" {
-  value = data.isard_network_interfaces.public_bridge.interfaces
+  value = data.isardvdi_network_interfaces.public_bridge.interfaces
 }
 ```
 
@@ -90,15 +90,15 @@ data "isardvdi_network_interfaces" "custom" {
 }
 
 locals {
-  interface_exists = length(data.isard_network_interfaces.custom.interfaces) > 0
-  interface_id     = local.interface_exists ? data.isard_network_interfaces.custom.interfaces[0].id : null
+  interface_exists = length(data.isardvdi_network_interfaces.custom.interfaces) > 0
+  interface_id     = local.interface_exists ? data.isardvdi_network_interfaces.custom.interfaces[0].id : null
 }
 
 resource "isardvdi_vm" "conditional" {
   count = local.interface_exists ? 1 : 0
   
   name        = "vm-conditional"
-  template_id = data.isard_templates.ubuntu.templates[0].id
+  template_id = data.isardvdi_templates.ubuntu.templates[0].id
   interfaces  = [local.interface_id]
 }
 ```
@@ -197,7 +197,7 @@ data "isardvdi_network_interfaces" "all" {}
 
 output "inventory" {
   value = {
-    for iface in data.isard_network_interfaces.all.interfaces :
+    for iface in data.isardvdi_network_interfaces.all.interfaces :
     iface.id => {
       name = iface.name
       type = iface.kind
@@ -217,7 +217,7 @@ data "isardvdi_network_interfaces" "required" {
 }
 
 resource "null_resource" "validate" {
-  count = length(data.isard_network_interfaces.required.interfaces) > 0 ? 0 : 1
+  count = length(data.isardvdi_network_interfaces.required.interfaces) > 0 ? 0 : 1
   
   provisioner "local-exec" {
     command = "echo 'ERROR: wireguard interface not found' && exit 1"
@@ -238,11 +238,11 @@ resource "isardvdi_vm" "team" {
   count = 3
   
   name        = "vm-team-${count.index + 1}"
-  template_id = data.isard_templates.ubuntu.templates[0].id
+  template_id = data.isardvdi_templates.ubuntu.templates[0].id
   
   interfaces = [
     "wireguard",
-    data.isard_network_interfaces.available.interfaces[count.index % length(data.isard_network_interfaces.available.interfaces)].id
+    data.isardvdi_network_interfaces.available.interfaces[count.index % length(data.isardvdi_network_interfaces.available.interfaces)].id
   ]
 }
 ```
@@ -255,11 +255,11 @@ data "isardvdi_network_interfaces" "all" {}
 output "network_infrastructure" {
   description = "Inventario completo de interfaces de red"
   value = {
-    total_interfaces = length(data.isard_network_interfaces.all.interfaces)
+    total_interfaces = length(data.isardvdi_network_interfaces.all.interfaces)
     by_type = {
-      for kind in distinct([for i in data.isard_network_interfaces.all.interfaces : i.kind]) :
+      for kind in distinct([for i in data.isardvdi_network_interfaces.all.interfaces : i.kind]) :
       kind => [
-        for i in data.isard_network_interfaces.all.interfaces :
+        for i in data.isardvdi_network_interfaces.all.interfaces :
         i.name if i.kind == kind
       ]
     }

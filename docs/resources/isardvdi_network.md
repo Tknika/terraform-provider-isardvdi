@@ -70,7 +70,7 @@ Además de los argumentos anteriores, se exportan los siguientes atributos:
 Las redes pueden ser importadas usando su ID:
 
 ```bash
-terraform import isard_network.mi_red a1b2c3d4-e5f6-7890-abcd-ef1234567890
+terraform import isardvdi_network.mi_red a1b2c3d4-e5f6-7890-abcd-ef1234567890
 ```
 
 ## Ciclo de Vida

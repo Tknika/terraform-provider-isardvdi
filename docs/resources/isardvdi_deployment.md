@@ -145,8 +145,8 @@ resource "isardvdi_deployment" "windows_deployment" {
   memory = 8
   
   # Usar ISO del data source
-  isos = length(data.isard_medias.installation_iso.medias) > 0 ? [
-    data.isard_medias.installation_iso.medias[0].id
+  isos = length(data.isardvdi_medias.installation_iso.medias) > 0 ? [
+    data.isardvdi_medias.installation_iso.medias[0].id
   ] : []
 
   allowed {
@@ -257,7 +257,7 @@ viewers = ["browser_rdp", "browser_vnc", "file_rdpgw", "file_rdpvpn", "file_spic
 Los deployments pueden ser importados usando su ID:
 
 ```bash
-terraform import isard_deployment.example deployment-uuid-123
+terraform import isardvdi_deployment.example deployment-uuid-123
 ```
 
 ## Notas Adicionales

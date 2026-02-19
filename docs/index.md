@@ -16,7 +16,7 @@ El provider de Isard VDI permite gestionar recursos en Isard VDI mediante Terraf
 provider "isardvdi" {
   endpoint         = "localhost"
   auth_method      = "form"
-  cathegory_id     = "default"
+  category_id      = "default"
   username         = "admin"
   password         = "IsardVDI"
   ssl_verification = false  # Para desarrollo local con certificados autofirmados
@@ -30,7 +30,7 @@ provider "isardvdi" {
   endpoint     = "mi-servidor.isard.com"
   auth_method  = "token"
   token        = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-  cathegory_id = "default"
+  category_id  = "default"
   # ssl_verification por defecto es true (recomendado para producción)
 }
 ```
@@ -41,7 +41,7 @@ provider "isardvdi" {
 provider "isardvdi" {
   endpoint         = "isard.empresa.com"
   auth_method      = "form"
-  cathegory_id     = "default"
+  category_id      = "default"
   username         = var.isard_username
   password         = var.isard_password
   ssl_verification = true  # Valida certificados SSL (default)
@@ -56,7 +56,7 @@ Los siguientes argumentos son soportados:
 
 - `endpoint` - (Requerido) El hostname o IP del servidor Isard VDI (sin protocolo, se usa HTTPS automáticamente)
 - `auth_method` - (Requerido) Método de autenticación. Valores aceptados: `"form"` o `"token"`
-- `cathegory_id` - (Requerido) ID de la categoría en Isard VDI
+- `category_id` - (Requerido) ID de la categoría en Isard VDI
 
 ### Opcionales
 
@@ -85,7 +85,7 @@ Para entornos de desarrollo con certificados autofirmados, puedes deshabilitar l
 provider "isardvdi" {
   endpoint         = "localhost"
   auth_method      = "form"
-  cathegory_id     = "default"
+  category_id      = "default"
   username         = "admin"
   password         = "IsardVDI"
   ssl_verification = false  # Solo para desarrollo
@@ -104,7 +104,7 @@ provider "isardvdi" {
   auth_method      = var.isard_auth_method
   username         = var.isard_username
   password         = var.isard_password
-  cathegory_id     = var.isard_category
+  category_id      = var.isard_category
   ssl_verification = var.isard_ssl_verification
 }
 ```

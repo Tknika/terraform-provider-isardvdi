@@ -19,7 +19,7 @@ data "isardvdi_users" "admins" {
 
 # Obtener el ID del primer usuario encontrado
 output "first_admin_id" {
-  value = data.isard_users.admins.users[0].id
+  value = data.isardvdi_users.admins.users[0].id
 }
 
 # Filtrar usuarios por categoría
@@ -88,7 +88,7 @@ data "isardvdi_users" "john_doe" {
 
 # Usar el ID del usuario en otro recurso
 resource "isardvdi_vm" "user_desktop" {
-  name        = "Desktop for ${data.isard_users.john_doe.users[0].name}"
+  name        = "Desktop for ${data.isardvdi_users.john_doe.users[0].name}"
   template_id = "some-template-id"
   # Otros atributos...
 }
@@ -96,10 +96,10 @@ resource "isardvdi_vm" "user_desktop" {
 # Mostrar información del usuario
 output "user_info" {
   value = {
-    id       = data.isard_users.john_doe.users[0].id
-    username = data.isard_users.john_doe.users[0].username
-    email    = data.isard_users.john_doe.users[0].email
-    role     = data.isard_users.john_doe.users[0].role_name
+    id       = data.isardvdi_users.john_doe.users[0].id
+    username = data.isardvdi_users.john_doe.users[0].username
+    email    = data.isardvdi_users.john_doe.users[0].email
+    role     = data.isardvdi_users.john_doe.users[0].role_name
   }
 }
 ```

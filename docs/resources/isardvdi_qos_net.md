@@ -97,7 +97,7 @@ Los mismos que los argumentos de entrada.
 Los perfiles QoS pueden ser importados usando su ID:
 
 ```bash
-terraform import isard_qos_net.standard standard-qos
+terraform import isardvdi_qos_net.standard standard-qos
 ```
 
 ## Ciclo de Vida

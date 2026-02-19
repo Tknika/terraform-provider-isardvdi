@@ -31,7 +31,7 @@ data "isardvdi_templates" "ubuntu" {
 resource "isardvdi_vm" "desarrollo" {
   name        = "desktop-desarrollo"
   description = "Desktop Ubuntu para desarrollo"
-  template_id = data.isard_templates.ubuntu.templates[0].id
+  template_id = data.isardvdi_templates.ubuntu.templates[0].id
 }
 ```
 
@@ -43,7 +43,7 @@ resource "isardvdi_vm" "equipo" {
   
   name        = "desktop-dev-${count.index + 1}"
   description = "Desktop para desarrollador ${count.index + 1}"
-  template_id = data.isard_templates.ubuntu.templates[0].id
+  template_id = data.isardvdi_templates.ubuntu.templates[0].id
 }
 ```
 
@@ -53,7 +53,7 @@ resource "isardvdi_vm" "equipo" {
 resource "isardvdi_vm" "potente" {
   name        = "desktop-potente"
   description = "Desktop con recursos aumentados"
-  template_id = data.isard_templates.ubuntu.templates[0].id
+  template_id = data.isardvdi_templates.ubuntu.templates[0].id
   vcpus       = 8
   memory      = 16.0
 }
@@ -69,12 +69,12 @@ data "isardvdi_network_interfaces" "all" {}
 resource "isardvdi_vm" "con_red" {
   name        = "desktop-con-red-custom"
   description = "Desktop con interfaces personalizadas"
-  template_id = data.isard_templates.ubuntu.templates[0].id
+  template_id = data.isardvdi_templates.ubuntu.templates[0].id
   
   # Importante: Si el template tiene RDP viewers, incluir wireguard
   network_interfaces = [
     "wireguard",
-    data.isard_network_interfaces.all.interfaces[0].id
+    data.isardvdi_network_interfaces.all.interfaces[0].id
   ]
 }
 ```
@@ -85,7 +85,7 @@ resource "isardvdi_vm" "con_red" {
 resource "isardvdi_vm" "con_viewers" {
   name        = "desktop-con-viewers"
   description = "Desktop con viewers específicos"
-  template_id = data.isard_templates.ubuntu.templates[0].id
+  template_id = data.isardvdi_templates.ubuntu.templates[0].id
   
   # Especificar qué viewers estarán disponibles
   viewers = [
@@ -102,7 +102,7 @@ resource "isardvdi_vm" "con_viewers" {
 resource "isardvdi_vm" "produccion" {
   name        = "desktop-produccion"
   description = "Desktop de producción con stop seguro"
-  template_id = data.isard_templates.ubuntu.templates[0].id
+  template_id = data.isardvdi_templates.ubuntu.templates[0].id
   
   # Detener la VM antes de eliminarla para evitar pérdida de datos
   force_stop_on_destroy = true
@@ -122,11 +122,11 @@ data "isardvdi_medias" "ubuntu_iso" {
 resource "isardvdi_vm" "con_iso" {
   name        = "desktop-con-iso"
   description = "Desktop con ISO adjunto"
-  template_id = data.isard_templates.ubuntu.templates[0].id
+  template_id = data.isardvdi_templates.ubuntu.templates[0].id
   
   # Adjuntar ISO de Ubuntu
-  isos = length(data.isard_medias.ubuntu_iso.medias) > 0 ? [
-    data.isard_medias.ubuntu_iso.medias[0].id
+  isos = length(data.isardvdi_medias.ubuntu_iso.medias) > 0 ? [
+    data.isardvdi_medias.ubuntu_iso.medias[0].id
   ] : []
 }
 ```
@@ -137,7 +137,7 @@ resource "isardvdi_vm" "con_iso" {
 resource "isardvdi_vm" "con_multiples_isos" {
   name        = "desktop-herramientas"
   description = "Desktop con múltiples ISOs de herramientas"
-  template_id = data.isard_templates.ubuntu.templates[0].id
+  template_id = data.isardvdi_templates.ubuntu.templates[0].id
   
   vcpus  = 4
   memory = 8
@@ -184,7 +184,7 @@ Además de los argumentos anteriores, se exportan los siguientes atributos:
 Los desktops pueden ser importados usando su ID:
 
 ```bash
-terraform import isard_vm.ejemplo a1b2c3d4-e5f6-7890-abcd-ef1234567890
+terraform import isardvdi_vm.ejemplo a1b2c3d4-e5f6-7890-abcd-ef1234567890
 ```
 
 ## Ciclo de Vida
@@ -268,7 +268,7 @@ data "isardvdi_templates" "ubuntu" {
 
 resource "isardvdi_vm" "mi_vm" {
   name        = "mi-desktop"
-  template_id = data.isard_templates.ubuntu.templates[0].id
+  template_id = data.isardvdi_templates.ubuntu.templates[0].id
   # Terraform esperará a que el data source se resuelva antes de crear
 }
 ```
@@ -291,7 +291,7 @@ variable "entorno" {
 resource "isardvdi_vm" "dinamico" {
   name        = "desktop-${var.entorno}-${formatdate("YYYYMMDD", timestamp())}"
   description = "Desktop de ${var.entorno}"
-  template_id = data.isard_templates.ubuntu.templates[0].id
+  template_id = data.isardvdi_templates.ubuntu.templates[0].id
 }
 ```
 
@@ -301,7 +301,7 @@ resource "isardvdi_vm" "dinamico" {
 resource "isardvdi_vm" "importante" {
   name        = "desktop-produccion"
   description = "Desktop crítico - no eliminar accidentalmente"
-  template_id = data.isard_templates.ubuntu.templates[0].id
+  template_id = data.isardvdi_templates.ubuntu.templates[0].id
   
   lifecycle {
     prevent_destroy = true
