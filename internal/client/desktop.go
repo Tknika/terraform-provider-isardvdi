@@ -49,11 +49,41 @@ func (c *Client) CreatePersistentDesktop(name, description, templateID string, v
 	// Agregar hardware personalizado si se especifica
 	if vcpus != nil || memory != nil || len(interfaces) > 0 || len(isos) > 0 || len(floppies) > 0 {
 		hardware := make(map[string]interface{})
+		
+		// Si se especifican vcpus o memory pero NO interfaces, obtener interfaces del template
+		if (vcpus != nil || memory != nil) && len(interfaces) == 0 {
+			template, err := c.GetTemplateInfo(templateID)
+			if err != nil {
+				return "", fmt.Errorf("error obteniendo template info: %w (template_id: %s)", err, templateID)
+			}
+			
+			// Los interfaces están en create_dict.hardware.interfaces
+			if createDict, ok := template["create_dict"].(map[string]interface{}); ok {
+				if templateHardware, ok := createDict["hardware"].(map[string]interface{}); ok {
+					if templateInterfaces, ok := templateHardware["interfaces"].([]interface{}); ok {
+						interfaces = make([]string, len(templateInterfaces))
+						for i, iface := range templateInterfaces {
+							// Los interfaces son objetos con "id" y "mac"
+							if ifaceMap, ok := iface.(map[string]interface{}); ok {
+								if ifaceID, ok := ifaceMap["id"].(string); ok {
+									interfaces[i] = ifaceID
+								}
+							}
+						}
+					}
+				}
+			}
+			// Si no pudimos obtener interfaces del template, error
+			if len(interfaces) == 0 {
+				return "", fmt.Errorf("no se pudieron obtener interfaces del template (template_id: %s)", templateID)
+			}
+		}
+		
 		if vcpus != nil {
-			hardware["vcpus"] = *vcpus
+			hardware["vcpus"] = int(*vcpus)
 		}
 		if memory != nil {
-			hardware["memory"] = *memory
+			hardware["memory"] = int(*memory)
 		}
 		if len(interfaces) > 0 {
 			hardware["interfaces"] = interfaces
