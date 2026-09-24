@@ -92,6 +92,27 @@ resource "isardvdi_deployment" "custom_viewers" {
   }
 }
 
+# Deployment esperando la IP wireguard de los desktops
+resource "isardvdi_deployment" "with_ip" {
+  name         = "Deployment con IP"
+  description  = "Deployment que arranca y espera IP de los desktops"
+  template_id  = "template-uuid-ip"
+  desktop_name = "Desktop IP"
+  visible      = true
+
+  # Arranca los desktops tras crear/actualizar y espera a que reporten IP
+  wait_for_ip             = true
+  ip_wait_timeout_seconds = 300
+
+  allowed {
+    groups = ["group-uuid-1"]
+  }
+}
+
+output "desktops_ips" {
+  value = isardvdi_deployment.with_ip.desktops
+}
+
 # Deployment con force_stop_on_destroy habilitado
 resource "isardvdi_deployment" "safe_destroy" {
   name         = "Deployment con Stop Automático"
@@ -201,10 +222,18 @@ resource "isardvdi_deployment" "all_viewers" {
   - `file_spice` - Visor SPICE (archivo de configuración)
 - `user_permissions` (List of String) Lista de permisos de usuario para el deployment.
 - `force_stop_on_destroy` (Boolean) Si es `true`, detiene todas las máquinas virtuales del deployment antes de eliminarlo usando parada forzada y espera hasta 120 segundos a que se detengan completamente. Por defecto: `false`. Nota: El proveedor también maneja automáticamente el error 428 (VMs no detenidas) reintentando la eliminación después de detener las VMs, incluso cuando este parámetro es `false`.
+- `wait_for_ip` (Boolean) Si es `true`, tras crear o actualizar el deployment, Terraform arranca todos sus desktops y espera a que reporten IP (wireguard) antes de finalizar el apply, rellenando el atributo `desktops`. Por defecto: `false`. **Importante:** las VMs quedan encendidas al terminar el apply; el proveedor no las detiene automáticamente.
+- `ip_wait_timeout_seconds` (Number) Tiempo máximo en segundos a esperar a que los desktops reporten IP cuando `wait_for_ip` es `true`. Por defecto: `300`. Si se agota el tiempo, el apply no falla: se emite un warning listando los desktops sin IP y estos quedan con `ip = ""`.
 
 ### Atributos de Solo Lectura
 
 - `id` (String) Identificador único del deployment.
+- `desktops` (List of Object) Lista de desktops del deployment. Solo se rellena cuando `wait_for_ip` es `true`; en caso contrario queda vacía. Cada elemento contiene:
+  - `id` (String) Identificador del desktop.
+  - `name` (String) Nombre del desktop.
+  - `ip` (String) IP (wireguard) del desktop. Vacía si el desktop no está arrancado o aún no la ha reportado.
+  - `user` (String) ID del usuario propietario del desktop.
+  - `user_name` (String) Nombre del usuario propietario del desktop.
 
 ## Nested Schema para `allowed`
 
@@ -275,3 +304,4 @@ terraform import isardvdi_deployment.example deployment-uuid-123
   Este comportamiento es automático y no requiere configuración, funcionando independientemente del valor de `force_stop_on_destroy`.
 - **Force Stop on Destroy:** Si `force_stop_on_destroy` está habilitado, Terraform detendrá las VMs proactivamente antes de intentar eliminar. Esto puede ser más rápido en algunos casos, pero no es estrictamente necesario gracias al manejo automático del error 428.
 - **Actualización:** Algunos cambios en el deployment pueden requerir que los desktops estén detenidos. Terraform te informará si esto es necesario.
+- **`wait_for_ip`:** El proveedor solo expone la IP de los desktops. Las VMs quedan encendidas tras el apply para permitir el acceso (por ejemplo, SSH). El campo `desktops` se mantiene tal cual estaba en el state si el deployment está detenido (`wait_for_ip = false` o desktops sin IP), evitando diffs espurios en sucesivos `terraform plan`.
