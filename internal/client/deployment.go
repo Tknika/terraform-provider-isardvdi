@@ -39,6 +39,19 @@ type DeploymentInfo struct {
 	VisibleDesktops int                    `json:"visibleDesktops"`
 	StartedDesktops int                    `json:"startedDesktops"`
 	CreatingDesktops int                   `json:"creatingDesktops"`
+	Desktops        []DeploymentDesktop    `json:"desktops"`
+}
+
+// DeploymentDesktop representa un desktop dentro de un deployment, tal y como
+// lo devuelve GET /api/v3/deployment/{id} (incluye la IP de wireguard cuando
+// el desktop está arrancado).
+type DeploymentDesktop struct {
+	ID       string `json:"id"`
+	Name     string `json:"name"`
+	State    string `json:"state"`
+	IP       string `json:"ip"`
+	User     string `json:"user"`
+	UserName string `json:"user_name"`
 }
 
 // CreateDeployment crea un nuevo deployment
@@ -519,6 +532,59 @@ func (c *Client) WaitForDeploymentStopped(deploymentID string, maxWaitSeconds in
 			// Verificar si todas las VMs están detenidas
 			if deploymentInfo.StartedDesktops == 0 && deploymentInfo.CreatingDesktops == 0 {
 				return nil
+			}
+		}
+	}
+}
+
+// WaitForDeploymentDesktopsIP espera hasta que todos los desktops del deployment
+// tengan una IP asignada (típicamente la de wireguard, reportada por el guest
+// una vez arrancado). Si se agota el timeout, no devuelve error: devuelve los
+// desktops obtenidos en la última consulta junto con los nombres/ids de los
+// que todavía no tienen IP, para que el llamante pueda emitir un warning.
+func (c *Client) WaitForDeploymentDesktopsIP(deploymentID string, maxWaitSeconds int) (desktops []DeploymentDesktop, pendientes []string, err error) {
+	checkDesktops := func() ([]DeploymentDesktop, []string, error) {
+		deploymentInfo, err := c.GetDeployment(deploymentID)
+		if err != nil {
+			return nil, nil, fmt.Errorf("error obteniendo información del deployment: %w", err)
+		}
+
+		var pending []string
+		for _, d := range deploymentInfo.Desktops {
+			if len(d.IP) == 0 {
+				pending = append(pending, fmt.Sprintf("%s (%s)", d.Name, d.ID))
+			}
+		}
+
+		return deploymentInfo.Desktops, pending, nil
+	}
+
+	// Verificar inmediatamente si todos los desktops ya tienen IP (antes de esperar)
+	desktops, pendientes, err = checkDesktops()
+	if err != nil {
+		return nil, nil, err
+	}
+	if len(pendientes) == 0 {
+		return desktops, pendientes, nil
+	}
+
+	// Si no todos tienen IP, esperar con polling
+	ticker := time.NewTicker(2 * time.Second)
+	defer ticker.Stop()
+
+	timeout := time.After(time.Duration(maxWaitSeconds) * time.Second)
+
+	for {
+		select {
+		case <-timeout:
+			return desktops, pendientes, nil
+		case <-ticker.C:
+			desktops, pendientes, err = checkDesktops()
+			if err != nil {
+				return nil, nil, err
+			}
+			if len(pendientes) == 0 {
+				return desktops, pendientes, nil
 			}
 		}
 	}

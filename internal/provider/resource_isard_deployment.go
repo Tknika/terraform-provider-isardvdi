@@ -51,6 +51,40 @@ type deploymentResourceModel struct {
 	UserPermissions    types.List   `tfsdk:"user_permissions"`
 	Viewers            types.List   `tfsdk:"viewers"`
 	ForceStopOnDestroy types.Bool   `tfsdk:"force_stop_on_destroy"`
+	WaitForIP          types.Bool   `tfsdk:"wait_for_ip"`
+	IPWaitTimeoutSeconds types.Int64 `tfsdk:"ip_wait_timeout_seconds"`
+	Desktops           types.List   `tfsdk:"desktops"`
+}
+
+// desktopObjectType es el tipo de objeto usado en la lista computed "desktops".
+var desktopObjectType = types.ObjectType{
+	AttrTypes: map[string]attr.Type{
+		"id":        types.StringType,
+		"name":      types.StringType,
+		"ip":        types.StringType,
+		"user":      types.StringType,
+		"user_name": types.StringType,
+	},
+}
+
+// emptyDesktopsList devuelve una lista vacía (nunca null) del tipo de objeto desktop.
+func emptyDesktopsList() types.List {
+	return types.ListValueMust(desktopObjectType, []attr.Value{})
+}
+
+// desktopsToTerraformList convierte los desktops devueltos por la API en una types.List computed.
+func desktopsToTerraformList(desktops []client.DeploymentDesktop) types.List {
+	values := make([]attr.Value, len(desktops))
+	for i, d := range desktops {
+		values[i] = types.ObjectValueMust(desktopObjectType.AttrTypes, map[string]attr.Value{
+			"id":        types.StringValue(d.ID),
+			"name":      types.StringValue(d.Name),
+			"ip":        types.StringValue(d.IP),
+			"user":      types.StringValue(d.User),
+			"user_name": types.StringValue(d.UserName),
+		})
+	}
+	return types.ListValueMust(desktopObjectType, values)
 }
 
 // Metadata returns the resource type name.
@@ -169,6 +203,46 @@ func (r *deploymentResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Computed:            true,
 				Default:             booldefault.StaticBool(false),
 				MarkdownDescription: "Si es true, detiene todas las máquinas virtuales del deployment antes de eliminarlo (por defecto: false)",
+			},
+			"wait_for_ip": schema.BoolAttribute{
+				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(false),
+				MarkdownDescription: "Si es true, arranca los desktops del deployment tras crearlo/actualizarlo y espera a que reporten IP (wireguard) antes de terminar el apply. Las VMs quedan encendidas (por defecto: false)",
+			},
+			"ip_wait_timeout_seconds": schema.Int64Attribute{
+				Optional:            true,
+				Computed:            true,
+				Default:             int64default.StaticInt64(300),
+				MarkdownDescription: "Tiempo máximo en segundos a esperar a que los desktops reporten IP cuando wait_for_ip es true (por defecto: 300)",
+			},
+			"desktops": schema.ListNestedAttribute{
+				Computed:            true,
+				MarkdownDescription: "Lista de desktops del deployment con su IP (solo se rellena cuando wait_for_ip es true)",
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"id": schema.StringAttribute{
+							Computed:            true,
+							MarkdownDescription: "Identificador del desktop",
+						},
+						"name": schema.StringAttribute{
+							Computed:            true,
+							MarkdownDescription: "Nombre del desktop",
+						},
+						"ip": schema.StringAttribute{
+							Computed:            true,
+							MarkdownDescription: "IP (wireguard) del desktop. Vacía si el desktop no está arrancado o aún no la ha reportado",
+						},
+						"user": schema.StringAttribute{
+							Computed:            true,
+							MarkdownDescription: "ID del usuario propietario del desktop",
+						},
+						"user_name": schema.StringAttribute{
+							Computed:            true,
+							MarkdownDescription: "Nombre del usuario propietario del desktop",
+						},
+					},
+				},
 			},
 		},
 	}
@@ -382,6 +456,37 @@ func (r *deploymentResource) Create(ctx context.Context, req resource.CreateRequ
 	// por los defaults del schema o por los valores especificados por el usuario
 	// No necesitamos leerlos de la API en Create ya que los enviamos nosotros
 
+	// Si wait_for_ip es true, arrancar el deployment y esperar a que los desktops reporten IP
+	plan.Desktops = emptyDesktopsList()
+	if plan.WaitForIP.ValueBool() {
+		if err := r.client.StartDeployment(deploymentID); err != nil {
+			resp.Diagnostics.AddError(
+				"Error arrancando el deployment",
+				fmt.Sprintf("No se pudo arrancar el deployment (ID: %s): %s", deploymentID, err.Error()),
+			)
+			return
+		}
+
+		desktops, pendientes, err := r.client.WaitForDeploymentDesktopsIP(deploymentID, int(plan.IPWaitTimeoutSeconds.ValueInt64()))
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error esperando la IP de los desktops del deployment",
+				fmt.Sprintf("No se pudo obtener el estado del deployment (ID: %s): %s", deploymentID, err.Error()),
+			)
+			return
+		}
+
+		plan.Desktops = desktopsToTerraformList(desktops)
+
+		if len(pendientes) > 0 {
+			resp.Diagnostics.AddWarning(
+				"Algunos desktops no reportaron IP a tiempo",
+				fmt.Sprintf("Los siguientes desktops del deployment (ID: %s) no tenían IP asignada tras %d segundos: %s",
+					deploymentID, plan.IPWaitTimeoutSeconds.ValueInt64(), fmt.Sprint(pendientes)),
+			)
+		}
+	}
+
 	// Escribir el estado
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
@@ -484,6 +589,21 @@ func (r *deploymentResource) Read(ctx context.Context, req resource.ReadRequest,
 	// Los valores de vcpus, memory y network_interfaces se mantienen del state
 	// ya que son los que se enviaron en la creación
 
+	// Actualizar desktops (id/name/ip/user/user_name) si al menos uno tiene IP.
+	// Si el deployment está parado (ninguna IP), se mantiene lo que ya había en state.
+	hasIP := false
+	for _, d := range deployment.Desktops {
+		if len(d.IP) > 0 {
+			hasIP = true
+			break
+		}
+	}
+	if hasIP {
+		state.Desktops = desktopsToTerraformList(deployment.Desktops)
+	} else if state.Desktops.IsNull() || state.Desktops.IsUnknown() {
+		state.Desktops = emptyDesktopsList()
+	}
+
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 }
@@ -492,6 +612,13 @@ func (r *deploymentResource) Read(ctx context.Context, req resource.ReadRequest,
 func (r *deploymentResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan deploymentResourceModel
 	diags := req.Plan.Get(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	var state deploymentResourceModel
+	diags = req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -607,6 +734,39 @@ func (r *deploymentResource) Update(ctx context.Context, req resource.UpdateRequ
 			fmt.Sprintf("No se pudo actualizar el deployment (ID: %s): %s", plan.ID.ValueString(), err.Error()),
 		)
 		return
+	}
+
+	// Si wait_for_ip es true, (re)arrancar el deployment y esperar a que los desktops reporten IP.
+	// Si es false, mantener los desktops que ya había en el state.
+	if plan.WaitForIP.ValueBool() {
+		if err := r.client.StartDeployment(plan.ID.ValueString()); err != nil {
+			resp.Diagnostics.AddError(
+				"Error arrancando el deployment",
+				fmt.Sprintf("No se pudo arrancar el deployment (ID: %s): %s", plan.ID.ValueString(), err.Error()),
+			)
+			return
+		}
+
+		desktops, pendientes, err := r.client.WaitForDeploymentDesktopsIP(plan.ID.ValueString(), int(plan.IPWaitTimeoutSeconds.ValueInt64()))
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error esperando la IP de los desktops del deployment",
+				fmt.Sprintf("No se pudo obtener el estado del deployment (ID: %s): %s", plan.ID.ValueString(), err.Error()),
+			)
+			return
+		}
+
+		plan.Desktops = desktopsToTerraformList(desktops)
+
+		if len(pendientes) > 0 {
+			resp.Diagnostics.AddWarning(
+				"Algunos desktops no reportaron IP a tiempo",
+				fmt.Sprintf("Los siguientes desktops del deployment (ID: %s) no tenían IP asignada tras %d segundos: %s",
+					plan.ID.ValueString(), plan.IPWaitTimeoutSeconds.ValueInt64(), fmt.Sprint(pendientes)),
+			)
+		}
+	} else {
+		plan.Desktops = state.Desktops
 	}
 
 	// Escribir el estado
